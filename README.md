@@ -50,8 +50,8 @@ monorepo/
 
 ```bash
 # Clone dan install dependencies
-git clone <repo-url>
-cd dango-dex-tools
+git clone https://github.com/hokireceh/dango-tools.git
+cd dango-tools
 pnpm install
 
 # Salin file env dan isi nilainya

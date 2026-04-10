@@ -2,8 +2,8 @@ import { execFile } from "child_process";
 
 const SAWERIA_API = "https://backend.saweria.co";
 
-const SAWERIA_USERNAME = process.env.SAWERIA_USERNAME ?? "";
-const SAWERIA_USER_ID = process.env.SAWERIA_USER_ID ?? "";
+const SAWERIA_USERNAME = process.env.SAWERIA_USERNAME ?? "zahwafe";
+const SAWERIA_USER_ID = process.env.SAWERIA_USER_ID ?? "d8e876df-405c-4e08-9708-9808b9037ea5";
 
 const CURL_HEADERS = [
   "-H", "Accept: */*",
