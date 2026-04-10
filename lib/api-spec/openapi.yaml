@@ -9,6 +9,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication and payment operations
   - name: grid-bots
     description: Grid trading bot operations
   - name: bot-logs
@@ -28,6 +30,65 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/initiate:
+    post:
+      operationId: initiatePayment
+      tags: [auth]
+      summary: Initiate Saweria QRIS payment for access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitiatePaymentBody"
+      responses:
+        "200":
+          description: Payment initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InitiatePaymentResponse"
+        "503":
+          description: Saweria not configured
+
+  /auth/poll/{donationId}:
+    get:
+      operationId: pollPayment
+      tags: [auth]
+      summary: Poll payment status by donation ID
+      parameters:
+        - name: donationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollPaymentResponse"
+
+  /auth/verify:
+    post:
+      operationId: verifyToken
+      tags: [auth]
+      summary: Verify an access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyTokenBody"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyTokenResponse"
 
   /grid-bots:
     get:
@@ -245,6 +306,79 @@ paths:
 
 components:
   schemas:
+    InitiatePaymentBody:
+      type: object
+      properties:
+        amount:
+          type: integer
+          enum: [50000, 100000, 150000]
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - amount
+
+    InitiatePaymentResponse:
+      type: object
+      properties:
+        donationId:
+          type: string
+        qrString:
+          type: string
+        amountToPay:
+          type: integer
+        pgFee:
+          type: integer
+      required:
+        - donationId
+        - qrString
+        - amountToPay
+        - pgFee
+
+    PollPaymentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED]
+        token:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+          nullable: true
+      required:
+        - status
+
+    VerifyTokenBody:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    VerifyTokenResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        expiresAt:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+      required:
+        - valid
+
     HealthStatus:
       type: object
       properties:
