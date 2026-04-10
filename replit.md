@@ -39,12 +39,12 @@ Mode aggressive memiliki warning tooltip di UI.
 
 ## Key Commands
 
-- `pnpm run typecheck` — full typecheck
-- `pnpm run build` — typecheck + build all
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks
-- `pnpm --filter @workspace/db run push` — push DB schema
-- `pnpm --filter @workspace/api-server run dev` — run API server
-- `pnpm --filter @workspace/dex-tools run dev` — run frontend
+- ```pnpm run typecheck``` — full typecheck
+- ```pnpm run build``` — typecheck + build all
+- ```pnpm --filter @workspace/api-spec run codegen``` — regenerate API hooks
+- ```pnpm --filter @workspace/db run push``` — push DB schema
+- ```pnpm --filter @workspace/api-server run dev``` — run API server
+- ```pnpm --filter @workspace/dex-tools run dev``` — run frontend
 
 ## DB Tables
 
