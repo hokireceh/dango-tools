@@ -1,100 +1,16 @@
 import { Router } from "express";
 import { db, gridBotsTable, botLogsTable } from "@workspace/db";
 import { desc } from "drizzle-orm";
+import { getPricesForSymbols, COINGECKO_IDS } from "../lib/priceService";
 
 const router = Router();
 
-const COINGECKO_IDS: Record<string, string> = {
-  BTC: "bitcoin",
-  ETH: "ethereum",
-  ATOM: "cosmos",
-  SOL: "solana",
-  OSMO: "osmosis",
-  INJ: "injective-protocol",
-  TIA: "celestia",
-  DYDX: "dydx-chain",
-  USDT: "tether",
-  BNB: "binancecoin",
-  AVAX: "avalanche-2",
-  DOT: "polkadot",
-  LINK: "chainlink",
-  MATIC: "matic-network",
-  OP: "optimism",
-  ARB: "arbitrum",
-  JUP: "jupiter-exchange-solana",
-};
-
 const DEFAULT_PAIRS = ["BTC/USDC", "ETH/USDC", "ATOM/USDC", "SOL/USDC", "OSMO/USDC", "INJ/USDC", "TIA/USDC"];
-
-type PriceCache = {
-  prices: MarketPriceData[];
-  fetchedAt: number;
-};
-
-type MarketPriceData = {
-  symbol: string;
-  pair: string;
-  price: number;
-  change24h: number;
-  high24h: number;
-  low24h: number;
-  volume24h: number;
-  source: string;
-};
-
-let priceCache: PriceCache | null = null;
-const CACHE_TTL_MS = 60 * 1000;
-
-async function fetchPricesFromCoinGecko(symbols: string[]): Promise<MarketPriceData[]> {
-  const ids = symbols.map((s) => COINGECKO_IDS[s.toUpperCase()]).filter(Boolean).join(",");
-  if (!ids) return [];
-
-  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h&per_page=50&page=1`;
-
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
-  });
-
-  if (!res.ok) {
-    throw new Error(`CoinGecko API error: ${res.status}`);
-  }
-
-  const data = (await res.json()) as Array<{
-    symbol: string;
-    current_price: number;
-    price_change_percentage_24h: number;
-    high_24h: number;
-    low_24h: number;
-    total_volume: number;
-  }>;
-
-  return data.map((coin) => ({
-    symbol: coin.symbol.toUpperCase(),
-    pair: `${coin.symbol.toUpperCase()}/USDC`,
-    price: coin.current_price ?? 0,
-    change24h: coin.price_change_percentage_24h ?? 0,
-    high24h: coin.high_24h ?? 0,
-    low24h: coin.low_24h ?? 0,
-    volume24h: coin.total_volume ?? 0,
-    source: "CoinGecko",
-  }));
-}
-
-async function getPrices(symbols: string[]): Promise<MarketPriceData[]> {
-  const now = Date.now();
-  if (priceCache && now - priceCache.fetchedAt < CACHE_TTL_MS) {
-    const cached = priceCache.prices.filter((p) => symbols.includes(p.symbol));
-    if (cached.length > 0) return cached;
-  }
-  const prices = await fetchPricesFromCoinGecko(symbols);
-  priceCache = { prices, fetchedAt: now };
-  return prices.filter((p) => symbols.includes(p.symbol));
-}
 
 router.get("/market/prices", async (req, res) => {
   try {
     const symbols = DEFAULT_PAIRS.map((p) => p.split("/")[0]);
-    const prices = await getPrices(symbols);
+    const prices = await getPricesForSymbols(symbols);
     res.json(prices);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch market prices");
@@ -109,7 +25,7 @@ router.get("/market/price/:symbol", async (req, res) => {
     return;
   }
   try {
-    const prices = await getPrices([symbol]);
+    const prices = await getPricesForSymbols([symbol]);
     if (prices.length === 0) {
       res.status(404).json({ error: `Harga untuk ${symbol} tidak tersedia` });
       return;

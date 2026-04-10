@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, gridBotsTable, botLogsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
+import { getPriceForPair } from "../lib/priceService";
 import {
   CreateGridBotBody,
   UpdateGridBotBody,
@@ -160,7 +161,9 @@ router.post("/grid-bots/:id/trigger-rerange", async (req, res) => {
     return;
   }
 
-  const simulatedPrice = (Number(bot.lowerPrice) + Number(bot.upperPrice)) / 2;
+  const marketPrice = await getPriceForPair(bot.pair);
+  const currentPrice = marketPrice ?? (Number(bot.lowerPrice) + Number(bot.upperPrice)) / 2;
+  const priceSource = marketPrice !== null ? "market" : "fallback (midpoint)";
 
   await db
     .update(gridBotsTable)
@@ -172,8 +175,8 @@ router.post("/grid-bots/:id/trigger-rerange", async (req, res) => {
     .values({
       botId: bot.id,
       eventType: "RERANGE",
-      message: `Rerange manual dipicu — ${bot.orderType.toUpperCase()} ${bot.pair} (mode: ${bot.rerangeMode})`,
-      priceAtEvent: String(simulatedPrice),
+      message: `Rerange manual dipicu — ${bot.orderType.toUpperCase()} ${bot.pair} @ $${currentPrice.toFixed(4)} (mode: ${bot.rerangeMode}, src: ${priceSource})`,
+      priceAtEvent: String(currentPrice),
     })
     .returning();
 
