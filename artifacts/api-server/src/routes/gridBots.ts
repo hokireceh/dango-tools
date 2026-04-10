@@ -52,7 +52,7 @@ router.post("/grid-bots", async (req, res) => {
 
   await db.insert(botLogsTable).values({
     botId: bot.id,
-    eventType: "created",
+    eventType: "CREATED",
     message: `Bot "${bot.name}" dibuat — ${orderType.toUpperCase()} ${pair}, mode ${rerangeMode}`,
     priceAtEvent: null,
   });
@@ -140,7 +140,7 @@ router.post("/grid-bots/:id/toggle", async (req, res) => {
 
   await db.insert(botLogsTable).values({
     botId: bot.id,
-    eventType: "toggle",
+    eventType: "TOGGLE",
     message: `Bot "${bot.name}" ${updated.isActive ? "diaktifkan" : "dinonaktifkan"}`,
     priceAtEvent: null,
   });
@@ -171,7 +171,7 @@ router.post("/grid-bots/:id/trigger-rerange", async (req, res) => {
     .insert(botLogsTable)
     .values({
       botId: bot.id,
-      eventType: "rerange",
+      eventType: "RERANGE",
       message: `Rerange manual dipicu — ${bot.orderType.toUpperCase()} ${bot.pair} (mode: ${bot.rerangeMode})`,
       priceAtEvent: String(simulatedPrice),
     })
