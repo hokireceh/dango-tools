@@ -1,0 +1,270 @@
+> SOURCE: https://dango-4.gitbook.io/dango-docs/trading
+
+- Trading | Dango DocsGitBook AssistantGitBook AssistantWorking…Thinking…Waiting for your answer…closeGitBook AssistantGood morningI&#x27;m here to help you with the docs.What is this page about?What should I read next?Can you give an example?chevron-upchevron-down⌘CtrliAI Based on your contextquestion-circleSendhand-waveAbout Dango
+- Architecture & Technology
+- Core Features
+- Trading
+- Referral system
+- Points
+- Audits
+- Accounts
+- Roadmap
+- Team
+- Community
+
+chevron-upchevron-down
+
+gitbookPowered by GitBook
+
+xmarkblock-quoteOn this pagechevron-down
+
+
+## hashtagTrading on Dango
+Dango offers 2 products — spot and perps — all settled through the same CLOB engine and accessible from one unified account.
+
+
+### hashtagSpot Trading
+Traditional buy/sell of token pairs without leverage. Spot trading runs through the on-chain CLOB, giving users price-time priority order book execution rather than AMM slippage.
+
+
+#### hashtagSupported Pairs
+Alpha Mainnet launched in January 2026 with ETH/USDC as the initial pair. Additional pairs are being added progressively. Previously available on testnet:
+
+
+- BTC/USDC
+- ETH/USDC
+- SOL/USDC
+
+#### hashtagOrder Types
+Type
+
+Description
+
+
+Market
+
+
+Executes immediately at the best available price
+
+
+Limit
+
+
+Rests in the order book until filled or cancelled at a target price
+
+
+Batch settlement
+
+
+All eligible orders settle every 0.2–0.5s at a uniform clearing price
+
+
+#### hashtagTrade Lifecycle
+
+
+### hashtagPerpetual Futures
+Perpetual futures are leveraged derivative contracts with no expiry date. They track the spot price of an asset via a funding rate mechanism — periodic payments between longs and shorts that keep the perp price anchored to spot.
+
+Dango&#x27;s perps are:
+
+
+- Fully on-chain — matching through the same CLOB as spot
+- Cross-margined — spot assets back perp positions via unified margin
+- Keeper-free — funding rates computed and applied automatically via on-chain cron jobs
+
+#### hashtagFunding Rates
+
+- Calculated by on-chain cron jobs, no external keeper required
+- Triggered by oracle price feeds (e.g., Chainlink)
+- Long pays short when perp trades above spot; short pays long when below
+- Converges perp price toward spot organically
+
+### hashtagCLOB vs AMM
+Feature
+
+AMM (e.g. Uniswap)
+
+CLOB (Dango)
+
+
+Price discovery
+
+
+Formula-based (x·y = k)
+
+
+Order book, bid/ask
+
+
+Slippage
+
+
+Always (size-dependent)
+
+
+Minimal (fills at limit price)
+
+
+MEV exposure
+
+
+High
+
+
+Low (batch auctions)
+
+
+Impermanent loss
+
+
+Yes (LPs)
+
+
+No
+
+
+Transparency
+
+
+Contracts on-chain
+
+
+Full order book on-chain
+
+
+Order types
+
+
+Swaps only
+
+
+Market, limit, stop
+
+
+Execution latency
+
+
+1 block per tx
+
+
+0.2–0.5s batch
+
+
+Dango&#x27;s trading mechanics are closer to a centralized exchange than to Uniswap.
+
+
+#### hashtagFees
+Fees are based on your rolling 14-day perpetual trading volume.
+
+Tier
+
+
+14-day volume
+
+
+Maker
+
+
+Taker
+
+
+1
+
+
+0 - $100k
+
+
+0.010%
+
+
+0.038%
+
+
+2
+
+
+$100k - $1m
+
+
+0.008%
+
+
+0.032%
+
+
+3
+
+
+$1m - $10m
+
+
+0.006%
+
+
+0.026%
+
+
+4
+
+
+$10m - $50m
+
+
+0.004%
+
+
+0.020%
+
+
+5
+
+
+$50m - $200m
+
+
+0.002%
+
+
+0.016%
+
+
+6
+
+
+$200m+
+
+
+0.00%
+
+
+0.014%
+
+
+PreviousCore Featureschevron-leftNextReferral systemchevron-right
+
+Last updated 16 days ago
+
+Was this helpful?
+
+
+- Trading on Dango
+- Spot Trading
+- Perpetual Futures
+- CLOB vs AMM
+
+
+Was this helpful?
+
+
+Copy
+```
+1. Submit order (market or limit)
+↓
+2. Order enters the on-chain order book
+↓
+3. Batch auction fires (every 0.2–0.5s)
+↓
+4. Matching engine clears all eligible orders at a uniform price
+↓
+5. Fill recorded on-chain; balances update in unified margin account
+```

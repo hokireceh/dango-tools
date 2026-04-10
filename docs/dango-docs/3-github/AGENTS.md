@@ -1,4 +1,4 @@
-SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/AGENTS.md
+> SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/AGENTS.md
 
 # Agent Handoff (Grug/Dango Monorepo)
 

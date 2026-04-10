@@ -1,4 +1,4 @@
-SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/README.md
+> SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/README.md
 
 <div align="center">
   <img src="book/left-curve.svg" width="150" styles="">

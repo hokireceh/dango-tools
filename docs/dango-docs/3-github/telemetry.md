@@ -1,4 +1,4 @@
-SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/telemetry.md
+> SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/telemetry.md
 
 # Telemetry Playbook (OTLP + Sentry)
 

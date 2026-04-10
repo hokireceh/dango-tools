@@ -1,4 +1,4 @@
-SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/TYPESCRIPT_GUIDELINES.md
+> SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/TYPESCRIPT_GUIDELINES.md
 
 # TypeScript Patterns and Conventions
 

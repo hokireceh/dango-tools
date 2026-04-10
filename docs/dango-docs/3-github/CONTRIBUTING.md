@@ -1,4 +1,4 @@
-SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/CONTRIBUTING.md
+> SOURCE: https://raw.githubusercontent.com/left-curve/left-curve/main/CONTRIBUTING.md
 
 # Contributing Guidelines
 
