@@ -5,11 +5,16 @@ import { logger } from "./logger";
 
 const SCHEDULER_INTERVAL_MS = 60 * 1000; // jalankan setiap 60 detik
 
-// Seberapa jauh harga harus keluar dari range sebelum rerange dipicu
-const RERANGE_THRESHOLDS: Record<string, number> = {
-  conservative: 0.05, // 5% di luar range
-  moderate: 0.02,     // 2% di luar range
-  aggressive: 0,      // langsung begitu keluar range
+// Seberapa dekat ke tepi (dari dalam range) sebelum rerange dipicu.
+// Nilai = fraksi dari lebar range (upper - lower) diukur dari tepi ke dalam.
+// Contoh: 0.30 → trigger jika harga berada dalam 30% lebar range dari tepi atas/bawah.
+// conservative = zona 5% dari tepi (paling jarang trigger — harus hampir keluar dulu)
+// moderate     = zona 50% dari tepi (trigger saat masuk paruh luar range)
+// aggressive   = zona 30% dari tepi (antara moderate dan conservative)
+const RERANGE_EDGE_ZONES: Record<string, number> = {
+  conservative: 0.05, // dalam 5% lebar range dari tepi → jarang trigger
+  moderate:     0.50, // dalam 50% lebar range dari tepi → trigger lebih awal
+  aggressive:   0.30, // dalam 30% lebar range dari tepi
 };
 
 function shouldRerange(
@@ -18,10 +23,12 @@ function shouldRerange(
   upperPrice: number,
   mode: string
 ): boolean {
-  const threshold = RERANGE_THRESHOLDS[mode] ?? 0;
-  const effectiveLower = lowerPrice * (1 - threshold);
-  const effectiveUpper = upperPrice * (1 + threshold);
-  return currentPrice < effectiveLower || currentPrice > effectiveUpper;
+  const edgeZone = RERANGE_EDGE_ZONES[mode] ?? 0;
+  const rangeWidth = upperPrice - lowerPrice;
+  // Trigger jika harga masuk zona edge dari atas atau bawah
+  const upperTrigger = upperPrice - edgeZone * rangeWidth;
+  const lowerTrigger = lowerPrice + edgeZone * rangeWidth;
+  return currentPrice >= upperTrigger || currentPrice <= lowerTrigger;
 }
 
 async function runRerangeCheck() {
@@ -57,7 +64,7 @@ async function runRerangeCheck() {
       await db.insert(botLogsTable).values({
         botId: bot.id,
         eventType: "RERANGE",
-        message: `Auto-rerange dipicu (mode: ${bot.rerangeMode}) — harga $${currentPrice.toFixed(4)} di luar range [$${lower}–$${upper}]`,
+        message: `Auto-rerange dipicu (mode: ${bot.rerangeMode}) — harga $${currentPrice.toFixed(4)} mendekati tepi range [$${lower}–$${upper}]`,
         priceAtEvent: String(currentPrice),
       });
 

@@ -175,3 +175,28 @@
 - **G-04** BLOCKED -- cancel order on-chain saat delete/toggle bot; menunggu investigasi Dango TypeScript SDK
 - **B-04** BELUM -- threshold rerange di kode (X% outside range) berbeda semantik dari docs (mendekati tepi dari dalam)
 - **B-05** BELUM -- /market/price/:symbol tidak support simbol dari DANGO_DENOM_MAP (BTC/ETH/SOL/HYPE)
+---
+## Audit 2026-04-10 Sesi 8
+
+### Fix Diterapkan
+- **B-04**: Threshold rerange diubah dari logika "outside range" ke logika "inside range, mendekati tepi" sesuai replit.md
+- **B-05**: /market/price/:symbol sekarang support simbol dari DANGO_DENOM_MAP (BTC, ETH, SOL, HYPE)
+
+### Catatan Teknis
+**B-04 — `artifacts/api-server/src/lib/rerangeScheduler.ts`:**
+- Rename `RERANGE_THRESHOLDS` -> `RERANGE_EDGE_ZONES` untuk kejelasan semantik
+- conservative: 0.05 (dalam 5% lebar range dari tepi — paling jarang trigger)
+- moderate:     0.50 (dalam 50% lebar range dari tepi — trigger saat masuk paruh luar)
+- aggressive:   0.30 (dalam 30% lebar range dari tepi)
+- Logika `shouldRerange` diubah: dari memperluas range ke luar (effectiveLower/Upper), ke menghitung zona tepi dari dalam (upperTrigger/lowerTrigger)
+  - Sebelum: trigger jika price < lower*(1-threshold) ATAU price > upper*(1+threshold)
+  - Sesudah: upperTrigger = upper - edgeZone*rangeWidth; trigger jika price >= upperTrigger ATAU price <= lowerTrigger
+- Update log message: "di luar range" -> "mendekati tepi range"
+
+**B-05 — `artifacts/api-server/src/routes/market.ts`:**
+- Tambah `DANGO_DENOM_MAP` ke import dari priceService
+- Guard diubah: `!COINGECKO_IDS[symbol]` -> `!COINGECKO_IDS[symbol] && !DANGO_DENOM_MAP[symbol]`
+- BTC, ETH, SOL, HYPE sekarang lolos guard dan di-fetch dari Dango Oracle via `getPricesForSymbols`
+
+### Carry-over
+- **G-04** BLOCKED -- cancel order on-chain saat delete/toggle bot; menunggu investigasi Dango TypeScript SDK

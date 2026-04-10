@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, gridBotsTable, botLogsTable } from "@workspace/db";
 import { desc } from "drizzle-orm";
-import { getPricesForSymbols, COINGECKO_IDS } from "../lib/priceService";
+import { getPricesForSymbols, COINGECKO_IDS, DANGO_DENOM_MAP } from "../lib/priceService";
 
 const router = Router();
 
@@ -20,7 +20,7 @@ router.get("/market/prices", async (req, res) => {
 
 router.get("/market/price/:symbol", async (req, res) => {
   const symbol = req.params.symbol.toUpperCase();
-  if (!COINGECKO_IDS[symbol]) {
+  if (!COINGECKO_IDS[symbol] && !DANGO_DENOM_MAP[symbol]) {
     res.status(404).json({ error: `Token ${symbol} tidak ditemukan` });
     return;
   }
