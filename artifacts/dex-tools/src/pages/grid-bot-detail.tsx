@@ -75,14 +75,7 @@ export default function GridBotDetail() {
     return <div className="text-center mt-20 text-muted-foreground">Bot not found</div>;
   }
 
-  // Mock chart data for simulation visual since it's asked to show PnL simulation graph
-  // In a real app this would come from a specific endpoint
-  const chartData = Array.from({ length: 30 }).map((_, i) => ({
-    time: i,
-    pnl: bot.totalPnl > 0 
-      ? Math.sin(i / 3) * 5 + (i * (bot.totalPnl / 30)) 
-      : Math.sin(i / 2) * 3 - (i * (Math.abs(bot.totalPnl) / 30))
-  }));
+  const pnlData: { time: number; pnl: number }[] = [];
 
   const getModeBadgeColor = (mode: string) => {
     switch (mode) {
@@ -189,32 +182,38 @@ export default function GridBotDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 min-h-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="time" hide />
-                  <YAxis 
-                    tickFormatter={(val) => `$${val}`} 
-                    axisLine={false} 
-                    tickLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                  />
-                  <RechartsTooltip 
-                    contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
-                    itemStyle={{ color: 'hsl(var(--foreground))' }}
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, 'PnL']}
-                    labelFormatter={() => ''}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="pnl" 
-                    stroke={bot.totalPnl >= 0 ? "hsl(var(--chart-2))" : "hsl(var(--chart-3))"} 
-                    strokeWidth={2} 
-                    dot={false}
-                    activeDot={{ r: 4, fill: bot.totalPnl >= 0 ? "hsl(var(--chart-2))" : "hsl(var(--chart-3))" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {pnlData.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                  PnL data not available yet — no executed trades.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={pnlData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="time" hide />
+                    <YAxis 
+                      tickFormatter={(val) => `$${val}`} 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    />
+                    <RechartsTooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
+                      itemStyle={{ color: 'hsl(var(--foreground))' }}
+                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'PnL']}
+                      labelFormatter={() => ''}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="pnl" 
+                      stroke={bot.totalPnl >= 0 ? "hsl(var(--chart-2))" : "hsl(var(--chart-3))"} 
+                      strokeWidth={2} 
+                      dot={false}
+                      activeDot={{ r: 4, fill: bot.totalPnl >= 0 ? "hsl(var(--chart-2))" : "hsl(var(--chart-3))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </div>

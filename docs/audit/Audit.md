@@ -42,7 +42,7 @@
 | # | Tingkat | Masalah | File | Status | Tanggal Fix |
 |---|---------|---------|------|--------|-------------|
 | T-01 | 🟡 BUG | **eventType case mismatch** — Backend log: `"created"/"toggle"/"rerange"` (lowercase). Frontend check: `'RERANGE'/'CREATED'/'ERROR'` (UPPERCASE). Kondisi tidak pernah true — semua log tampil dengan icon default abu-abu. | `artifacts/api-server/src/routes/gridBots.ts`, `artifacts/dex-tools/src/pages/grid-bot-detail.tsx` (baris 242–248) | ✅ SELESAI | 10 Apr 2026 |
-| T-02 | 🟡 BUG | **PnL chart adalah data palsu** — `grid-bot-detail.tsx:78` menggunakan `Math.sin(i / 3)` mock data dengan label "PnL Simulation" yang tampak seperti data real. Bisa menyesatkan user tentang performa bot. | `artifacts/dex-tools/src/pages/grid-bot-detail.tsx` (baris 78–85) | ⏳ BELUM | — |
+| T-02 | 🟡 BUG | **PnL chart adalah data palsu** — `grid-bot-detail.tsx:78` menggunakan `Math.sin(i / 3)` mock data dengan label "PnL Simulation" yang tampak seperti data real. Bisa menyesatkan user tentang performa bot. | `artifacts/dex-tools/src/pages/grid-bot-detail.tsx` (baris 78–85) | ✅ SELESAI | 10 Apr 2026 |
 
 ---
 
