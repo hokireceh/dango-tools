@@ -1,0 +1,141 @@
+SOURCE: https://dango-4.gitbook.io/dango-docs/referral-system
+
+Referral system | Dango Docs
+
+GitBook Assistant
+
+GitBook Assistant
+
+Working…  Thinking…  Waiting for your answer…
+
+close
+
+GitBook Assistant
+
+Good morning  I&#x27;m here to help you with the docs.
+
+What is this page about?
+
+What should I read next?
+
+Can you give an example?
+
+chevron-up
+
+chevron-down
+
+⌘  Ctrl
+
+i
+
+AI
+
+Based on your context
+
+question-circle
+
+Send
+
+hand-wave
+
+About Dango
+
+Architecture & Technology
+
+Core Features
+
+Trading
+
+Referral system
+
+Points
+
+Audits
+
+Accounts
+
+Roadmap
+
+Team
+
+Community
+
+chevron-up
+
+chevron-down
+
+gitbook
+
+Powered by GitBook
+
+xmark
+
+block-quote
+
+On this page  chevron-down
+
+Anyone can unlock a 10% commission ref code by trading $10k volume (tier 1)  To access higher commission tiers, users must increase their 30-day referral volume
+
+Tier
+
+Trading volume
+
+30-day referral volume
+
+Commission
+
+1
+
+$10k or more
+
+-
+
+10%
+
+2
+
+-
+
+$10m
+
+15%
+
+3
+
+-
+
+$30m
+
+20%
+
+4
+
+-
+
+$50m
+
+25%
+
+5
+
+-
+
+$100m
+
+30%
+
+Referrers can share up to a maximum of 50% of their commission with referees  Referrers receive 1 point for every 5 points earned by their direct referrals, and 1 point for every 20 points earned by their referees’ referees (two-tier)  Dango uses a tier-difference model:  If an upstream referrer has a higher tier than the direct referrer, they earn the difference between their tier and the direct referrer’s tier  If the upstream tier is equal or lower, they earn nothing
+
+Previous  Trading
+
+chevron-left
+
+Next  Points
+
+chevron-right
+
+Last updated  13 days ago
+
+Was this helpful?
+
+Was this helpful?

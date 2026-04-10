@@ -1,10 +1,17 @@
 import { logger } from "./logger";
 
+const DANGO_GRAPHQL = "https://api-mainnet.dango.zone/graphql";
+const ORACLE_CONTRACT = "0xcedc5f73cbb963a48471b849c3650e6e34cd3b6d";
+
+export const DANGO_DENOM_MAP: Record<string, string> = {
+  BTC: "perp/btcusd",
+  ETH: "perp/ethusd",
+  SOL: "perp/solusd",
+  HYPE: "perp/hypeusd",
+};
+
 export const COINGECKO_IDS: Record<string, string> = {
-  BTC: "bitcoin",
-  ETH: "ethereum",
   ATOM: "cosmos",
-  SOL: "solana",
   OSMO: "osmosis",
   INJ: "injective-protocol",
   TIA: "celestia",
@@ -38,6 +45,73 @@ type PriceCache = {
 
 let priceCache: PriceCache | null = null;
 const CACHE_TTL_MS = 60 * 1000;
+
+type DangoOraclePrices = Record<string, { humanized_price: string; precision: number; timestamp: string }>;
+
+async function fetchFromDangoOracle(): Promise<DangoOraclePrices> {
+  const body = {
+    query: `query { queryApp(request: { wasm_smart: { contract: "${ORACLE_CONTRACT}", msg: { prices: { limit: 30 } } } }) }`,
+  };
+
+  const res = await fetch(DANGO_GRAPHQL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(`Dango GraphQL error: ${res.status}`);
+
+  const json = (await res.json()) as { data?: { queryApp?: { wasm_smart?: DangoOraclePrices } }; errors?: unknown[] };
+  if (json.errors?.length) throw new Error(`Dango GraphQL errors: ${JSON.stringify(json.errors)}`);
+
+  return json.data?.queryApp?.wasm_smart ?? {};
+}
+
+async function fetchAllPrices(symbols: string[]): Promise<MarketPriceData[]> {
+  const results: MarketPriceData[] = [];
+  const needCoinGecko: string[] = [];
+
+  try {
+    const oraclePrices = await fetchFromDangoOracle();
+    const denomToSymbol: Record<string, string> = {};
+    for (const [sym, denom] of Object.entries(DANGO_DENOM_MAP)) {
+      denomToSymbol[denom] = sym;
+    }
+
+    for (const symbol of symbols) {
+      const denom = DANGO_DENOM_MAP[symbol.toUpperCase()];
+      if (denom && oraclePrices[denom]) {
+        const p = oraclePrices[denom];
+        results.push({
+          symbol: symbol.toUpperCase(),
+          pair: `${symbol.toUpperCase()}/USDC`,
+          price: parseFloat(p.humanized_price),
+          change24h: 0,
+          high24h: 0,
+          low24h: 0,
+          volume24h: 0,
+          source: "Dango Oracle",
+        });
+      } else {
+        needCoinGecko.push(symbol);
+      }
+    }
+  } catch (err) {
+    logger.warn({ err }, "Dango oracle fetch failed, falling back to CoinGecko for all symbols");
+    needCoinGecko.push(...symbols);
+  }
+
+  if (needCoinGecko.length > 0) {
+    try {
+      const cgResults = await fetchFromCoinGecko(needCoinGecko);
+      results.push(...cgResults);
+    } catch (err) {
+      logger.warn({ err }, "CoinGecko fallback also failed");
+    }
+  }
+
+  return results;
+}
 
 async function fetchFromCoinGecko(symbols: string[]): Promise<MarketPriceData[]> {
   const ids = symbols
@@ -78,7 +152,7 @@ export async function getPricesForSymbols(symbols: string[]): Promise<MarketPric
     const cached = priceCache.prices.filter((p) => symbols.includes(p.symbol));
     if (cached.length > 0) return cached;
   }
-  const prices = await fetchFromCoinGecko(symbols);
+  const prices = await fetchAllPrices(symbols);
   priceCache = { prices, fetchedAt: now };
   return prices.filter((p) => symbols.includes(p.symbol));
 }

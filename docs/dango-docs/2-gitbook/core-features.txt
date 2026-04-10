@@ -1,0 +1,211 @@
+SOURCE: https://dango-4.gitbook.io/dango-docs/core-features
+
+Core Features | Dango Docs
+
+GitBook Assistant
+
+GitBook Assistant
+
+Working…  Thinking…  Waiting for your answer…
+
+close
+
+GitBook Assistant
+
+Good morning  I&#x27;m here to help you with the docs.
+
+What is this page about?
+
+What should I read next?
+
+Can you give an example?
+
+chevron-up
+
+chevron-down
+
+⌘  Ctrl
+
+i
+
+AI
+
+Based on your context
+
+question-circle
+
+Send
+
+hand-wave
+
+About Dango
+
+Architecture & Technology
+
+Core Features
+
+Trading
+
+Referral system
+
+Points
+
+Audits
+
+Accounts
+
+Roadmap
+
+Team
+
+Community
+
+chevron-up
+
+chevron-down
+
+gitbook
+
+Powered by GitBook
+
+xmark
+
+block-quote
+
+On this page  chevron-down
+
+hashtag
+
+Core Features
+
+Dango&#x27;s product is built around four application-layer pillars — Spot, Perpetuals, Vaults, and Lending — all accessible from a single unified account. This page covers the platform-level features underpinning all four products.
+
+hashtag
+
+Unified Margin System
+
+The centerpiece of Dango&#x27;s design is its  Unified Margin Account : a single account that holds all assets and allows them to serve as collateral across every product simultaneously.
+
+hashtag
+
+How It Works
+
+Traditional DeFi requires separate deposits per protocol:
+
+Copy
+
+dYdX perp  →  deposit on dYdX
+
+Uniswap
+
+→  separate wallet balance
+
+Aave
+
+→  separate deposit on Aave
+
+On Dango, one deposit covers all of the above. ETH holdings, spot positions, and vault allocations all exist within one margin pool. The system dynamically calculates aggregate risk and adjusts borrowing capacity accordingly.
+
+hashtag
+
+Example
+
+A user deposits 1 ETH:
+
+Used as collateral to open a 5× leveraged BTC perp
+
+Backs a USDC loan for spot trading simultaneously
+
+Vault yield accrues on the idle portion
+
+One unified liquidation price governs all positions
+
+hashtag
+
+Gasless Trading
+
+From the user&#x27;s perspective, trading on Dango is  completely gasless  — no native token needed. All fees are denominated in USDC and collected automatically from the trading account.
+
+hashtag
+
+Native Usernames
+
+Dango accounts support  human-readable usernames  instead of hex addresses:
+
+@alice  instead of  0x4a2b...f91c
+
+Registered on-chain as part of the smart account system
+
+Accounts accumulate reputation and history attached to a persistent username
+
+hashtag
+
+Subaccounts
+
+Users can create  subaccounts  under a master account:
+
+Use Case  How Subaccounts Help
+
+Portfolio separation
+
+Keep long-term holdings separate from active trading
+
+Risk isolation
+
+Cap losses on a specific strategy without affecting other positions
+
+API / bot trading
+
+Grant a subaccount limited permissions to an automated strategy
+
+Team trading
+
+Multiple operators accessing a shared capital pool with defined limits
+
+hashtag
+
+Notifications
+
+A native  notification system  alerts users to fills, liquidation risk, funding rate changes, and other events.
+
+hashtag
+
+Built-in Block Explorer
+
+A native  block explorer  is integrated into the platform, giving traders visibility into transaction history, order fills, and on-chain state without leaving the exchange.
+
+hashtag
+
+Mobile App
+
+A native mobile app is on the roadmap. The passkey/biometric authentication system is particularly well-suited to mobile — logging in with Face ID or fingerprint rather than a 24-word seed phrase.
+
+Previous  Architecture & Technology
+
+chevron-left
+
+Next  Trading
+
+chevron-right
+
+Last updated  16 days ago
+
+Was this helpful?
+
+Core Features
+
+Unified Margin System
+
+Gasless Trading
+
+Native Usernames
+
+Subaccounts
+
+Notifications
+
+Built-in Block Explorer
+
+Mobile App
+
+Was this helpful?

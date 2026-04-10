@@ -32,8 +32,8 @@
 |---|---------|---------|------|--------|-------------|
 | G-01 | 🔴 KRITIKAL | **Auto-Rerange tidak pernah jalan** — Mode rerange (conservative/moderate/aggressive) tersimpan di DB, tapi tidak ada scheduler/cron/setInterval di codebase. Bot statis; user expect auto-adjust tapi nol terjadi. | `artifacts/api-server/src/lib/rerangeScheduler.ts` (baru) | ✅ SELESAI | 10 Apr 2026 |
 | G-02 | 🔴 KRITIKAL | **Trigger rerange = simulasi palsu** — `/trigger-rerange:163` menggunakan `simulatedPrice = (lower + upper)/2` bukan harga pasar. Tidak ada RPC call, tidak ada cancel/create order di CLOB. Hanya update counter DB. Tombol "Force Rerange" adalah placebo. | `artifacts/api-server/src/routes/gridBots.ts` (baris 151–185) | ✅ SELESAI | 10 Apr 2026 |
-| G-03 | 🔴 KRITIKAL | **Harga dari CoinGecko, bukan Dango** — `market.ts` pakai `api.coingecko.com`. Dango punya CLOB on-chain dengan price feed sendiri. Rerange trigger salah timing/harga → potensi loss. | `artifacts/api-server/src/routes/market.ts` | ⏳ BELUM | — |
-| G-04 | 🔴 KRITIKAL | **Delete/Toggle bot tidak cancel order on-chain** — `DELETE /grid-bots/:id` hanya DB delete; `POST /toggle` hanya ubah flag `isActive`. Order di CLOB Dango tetap live setelah bot "dimatikan". | `artifacts/api-server/src/routes/gridBots.ts` (baris 114–149) | ⏳ BELUM | — |
+| G-03 | 🔴 KRITIKAL | **Harga dari CoinGecko, bukan Dango** — `market.ts` pakai `api.coingecko.com`. Dango punya CLOB on-chain dengan price feed sendiri. Rerange trigger salah timing/harga → potensi loss. | `artifacts/api-server/src/lib/priceService.ts` | ✅ SELESAI | 10 Apr 2026 |
+| G-04 | 🔴 KRITIKAL | **Delete/Toggle bot tidak cancel order on-chain** — `DELETE /grid-bots/:id` hanya DB delete; `POST /toggle` hanya ubah flag `isActive`. Order di CLOB Dango tetap live setelah bot "dimatikan". | `artifacts/api-server/src/routes/gridBots.ts` (baris 114–149) | ⏳ BLOCKED | — |
 
 ---
 

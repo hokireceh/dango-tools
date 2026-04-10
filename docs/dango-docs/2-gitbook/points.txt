@@ -1,0 +1,167 @@
+SOURCE: https://dango-4.gitbook.io/dango-docs/points
+
+Points | Dango Docs
+
+GitBook Assistant
+
+GitBook Assistant
+
+Working…  Thinking…  Waiting for your answer…
+
+close
+
+GitBook Assistant
+
+Good morning  I&#x27;m here to help you with the docs.
+
+What is this page about?
+
+What should I read next?
+
+Can you give an example?
+
+chevron-up
+
+chevron-down
+
+⌘  Ctrl
+
+i
+
+AI
+
+Based on your context
+
+question-circle
+
+Send
+
+hand-wave
+
+About Dango
+
+Architecture & Technology
+
+Core Features
+
+Trading
+
+Referral system
+
+Points
+
+Audits
+
+Accounts
+
+Roadmap
+
+Team
+
+Community
+
+chevron-up
+
+chevron-down
+
+gitbook
+
+Powered by GitBook
+
+xmark
+
+block-quote
+
+On this page  chevron-down
+
+hashtag
+
+What are Dango points?
+
+Our way of recognizing those who contribute to Dango’s success. They reflect a user’s overall engagement on our exchange.  1m points are distributed each week.
+
+hashtag
+
+How to earn points
+
+Perps traders share 750,000 points each week
+
+Vault depositors share 250,000 points each week
+
+Referrers receive 1 point for every 5 points earned by their direct referrals, and 1 point for every 20 points earned by their indirect referrals (2-tier system)
+
+hashtag
+
+Boosters
+
+Anyone who owns 1 or more Galxe OATs from Dango&#x27;s testnet quests is eligible for a temporary 4-week points boost. To activate the boost, simply link the EVM wallet(s) containing the OAT(s) to your Dango account. Each unique OAT grants a 100% points boost, up to a maximum of 400%.
+
+hashtag
+
+Boxes
+
+Users can open loot boxes by moving volume (taker or maker)  The more volume required to obtain the box, the greater chance of a more valuable reward
+
+Box Type
+
+How to Obtain
+
+Bronze
+
+Every $25k volume
+
+Silver
+
+Every $100k volume
+
+Gold
+
+Every $250k volume
+
+Crystal
+
+Every $500k volume
+
+hashtag
+
+NFTs
+
+There are 6 rarities of Dango NFTs:
+
+Common
+
+Uncommon
+
+Rare
+
+Epic
+
+Legendary
+
+Mythic
+
+Each loot box is guaranteed to contain 1 NFT of random rarity
+
+Each NFT has a hidden points value that will be revealed once the points program concludes
+
+hashtag
+
+Leagues
+
+All users are grouped into leagues based on their total points holdings. Players move up and down leagues at the start of each new week when points are distributed. There is no reward for climbing leagues, it’s simply for fun!
+
+Wood - bottom 30% of points holders  Iron - next 25%  Gold - next 18%  Platinum - next 12%  Diamond - next 8%  Master - next 5%  Grandmaster - top 2%
+
+Previous  Referral system
+
+chevron-left
+
+Next  Audits
+
+chevron-right
+
+Last updated  10 days ago
+
+Was this helpful?
+
+Was this helpful?
