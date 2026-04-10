@@ -355,13 +355,11 @@ async function onPaymentSuccess(
       `🎉 Selamat *${name}*! Akses kamu sudah aktif.\n\n` +
       `📋 *Detail Akun:*\n` +
       `• ID Login: \`${telegramId}\`\n` +
-      `• Password: \`${password}\`\n` +
       `• Plan: *${plan.label}*\n` +
       `• Berlaku hingga: *${expiresAt.toLocaleDateString("id-ID")}*\n\n` +
-      `🔐 Login ke dashboard:\n` +
-      `POST /api/auth/login\n` +
-      `\`{ "telegramId": "${telegramId}", "password": "${password}" }\`\n\n` +
-      `_Simpan password ini, tidak bisa ditampilkan lagi!_`,
+      `🔐 *Cara Login:*\n` +
+      `Gunakan *ID Login* di atas untuk masuk ke dashboard.\n` +
+      `Kredensial telah dikirim ke admin.`,
       {
         parse_mode: "Markdown",
         ...Markup.inlineKeyboard([
@@ -372,15 +370,14 @@ async function onPaymentSuccess(
     );
   } catch { /* pesan mungkin sudah dihapus */ }
 
-  // Notifikasi admin (include password plaintext sesuai spec)
+  // Notifikasi admin — tanpa password
   await notifyAdmin(bot,
     `💳 *PEMBAYARAN BERHASIL*\n\n` +
     `👤 User: *${name}* (@${telegramUsername ?? "-"})\n` +
     `🆔 TelegramID: \`${telegramId}\`\n` +
     `💰 Jumlah: ${formatRupiah(amountRaw)}\n` +
     `📦 Plan: *${plan.label}*\n` +
-    `📅 Expired: ${expiresAt.toLocaleDateString("id-ID")}\n\n` +
-    `🔑 Password (plaintext): \`${password}\`\n` +
+    `📅 Expired: ${expiresAt.toLocaleDateString("id-ID")}\n` +
     `🆔 DonationID: \`${donationId}\``
   );
 
@@ -550,7 +547,7 @@ bot.action("menu_info", async (ctx: BotContext) => {
     `💳 Metode bayar: *QRIS* (semua e-wallet & m-banking)\n` +
     `⏰ Waktu bayar: *${MAX_WAIT_MINUTES} menit*\n` +
     `🔒 Aman via Saweria\n\n` +
-    `Setelah bayar, kamu akan menerima *ID Login* dan *Password* untuk masuk ke dashboard.`,
+    `Setelah bayar, akses kamu langsung diaktifkan.\nID Login akan ditampilkan di chat ini.\nHubungi admin untuk mendapatkan kredensial login.`,
     {
       parse_mode: "Markdown",
       ...Markup.inlineKeyboard([[Markup.button.callback("🔙 Kembali", "back_main")]]),
