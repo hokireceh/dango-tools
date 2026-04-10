@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,17 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldAlert, Save, Trash2, Eye, EyeOff } from "lucide-react";
+import { ShieldAlert, Save, Trash2, Info } from "lucide-react";
 
 const settingsSchema = z.object({
   rpcEndpoint: z.string().url("Must be a valid URL").or(z.literal("")),
-  privateKey: z.string(),
 });
 
 export default function Settings() {
   const { settings, saveSettings, clearSettings, isLoaded } = useSettings();
   const { toast } = useToast();
-  const [showPk, setShowPk] = useState(false);
 
   const form = useForm<ConnectionSettings>({
     resolver: zodResolver(settingsSchema),
@@ -30,23 +27,23 @@ export default function Settings() {
   const onSubmit = (values: ConnectionSettings) => {
     const success = saveSettings(values);
     if (success) {
-      toast({ 
-        title: "Settings saved", 
-        description: "Credentials disimpan di browser storage (obfuscated, bukan enkripsi aman)." 
+      toast({
+        title: "Settings saved",
+        description: "Disimpan di browser storage (obfuscated, bukan enkripsi aman).",
       });
     } else {
-      toast({ 
-        title: "Failed to save", 
-        description: "An error occurred while saving data.", 
-        variant: "destructive" 
+      toast({
+        title: "Failed to save",
+        description: "An error occurred while saving data.",
+        variant: "destructive",
       });
     }
   };
 
   const handleClear = () => {
     clearSettings();
-    form.reset({ rpcEndpoint: "", privateKey: "" });
-    toast({ title: "Keys removed", description: "Local storage has been cleared." });
+    form.reset({ rpcEndpoint: "" });
+    toast({ title: "Settings cleared", description: "Local storage has been cleared." });
   };
 
   if (!isLoaded) return null;
@@ -55,23 +52,32 @@ export default function Settings() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Connection Settings</h1>
-        <p className="text-muted-foreground text-sm">Configure your on-chain connection credentials.</p>
+        <p className="text-muted-foreground text-sm">Configure your connection to Dango Exchange.</p>
       </div>
 
       <Alert variant="default" className="bg-chart-3/10 text-chart-3 border-chart-3/20">
         <ShieldAlert className="h-4 w-4" />
         <AlertTitle>Peringatan Keamanan</AlertTitle>
         <AlertDescription>
-          Credentials disimpan <strong>hanya di browser lokal kamu</strong> dalam format obfuscated —{" "}
+          Data disimpan <strong>hanya di browser lokal kamu</strong> dalam format obfuscated —{" "}
           <strong>bukan enkripsi aman</strong>. Jangan gunakan di perangkat publik atau bersama.
-          Data tidak dikirim ke server kami.
+        </AlertDescription>
+      </Alert>
+
+      <Alert variant="default" className="bg-primary/5 border-primary/20">
+        <Info className="h-4 w-4 text-primary" />
+        <AlertTitle className="text-primary">Tentang Autentikasi Dango</AlertTitle>
+        <AlertDescription className="text-muted-foreground">
+          Dango Exchange menggunakan sistem <strong>passkey / biometrik</strong> — bukan private key EVM.
+          Input private key tidak didukung dan telah dihapus karena berpotensi menyesatkan dan berbahaya.
+          Signing transaksi akan dilakukan melalui passkey browser saat integrasi on-chain tersedia.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>RPC Configuration</CardTitle>
-          <CardDescription>Enter the credentials required to connect to Dango Exchange.</CardDescription>
+          <CardDescription>Custom RPC node untuk koneksi ke jaringan Dango (opsional).</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -85,52 +91,21 @@ export default function Settings() {
                     <FormControl>
                       <Input placeholder="https://mainnet.dango.exchange/rpc" {...field} />
                     </FormControl>
-                    <FormDescription>Custom node RPC URL (optional)</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="privateKey"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Wallet Private Key</FormLabel>
-                    <div className="relative">
-                      <FormControl>
-                        <Input 
-                          type={showPk ? "text" : "password"} 
-                          placeholder="0x..." 
-                          {...field} 
-                          className="pr-10"
-                        />
-                      </FormControl>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
-                        onClick={() => setShowPk(!showPk)}
-                      >
-                        {showPk ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                    <FormDescription>Used to sign rerange transactions locally.</FormDescription>
+                    <FormDescription>Kosongkan untuk menggunakan node default.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
               <div className="pt-4 flex items-center justify-between">
-                <Button 
-                  type="button" 
-                  variant="destructive" 
+                <Button
+                  type="button"
+                  variant="destructive"
                   onClick={handleClear}
                   className="gap-2"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Clear All Keys
+                  Clear Settings
                 </Button>
                 <Button type="submit" className="gap-2">
                   <Save className="h-4 w-4" />

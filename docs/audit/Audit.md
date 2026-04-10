@@ -20,7 +20,7 @@
 
 | # | Tingkat | Masalah | File | Status | Tanggal Fix |
 |---|---------|---------|------|--------|-------------|
-| S-01 | 🔴 KRITIKAL | **Private Key field tidak kompatibel dengan Dango** — Placeholder `0x...` (EVM-style) bertentangan dengan docs Dango: *"keyless system with passkeys/biometrics"*. Tidak ada signing via passkey di kode. User share private key sensitif tanpa manfaat. | `artifacts/dex-tools/src/pages/settings.tsx` | ⏳ BELUM | — |
+| S-01 | 🔴 KRITIKAL | **Private Key field tidak kompatibel dengan Dango** — Placeholder `0x...` (EVM-style) bertentangan dengan docs Dango: *"keyless system with passkeys/biometrics"*. Tidak ada signing via passkey di kode. User share private key sensitif tanpa manfaat. | `artifacts/dex-tools/src/pages/settings.tsx` | ✅ SELESAI | 10 Apr 2026 |
 | S-02 | 🔴 KRITIKAL | **Enkripsi AES hardcoded = zero security** — `encryption.ts:6` menggunakan `STORAGE_ENCRYPTION_KEY = "DANGO_DEX_LOCAL_SECURE_KEY_998877"` yang terekspos di JS bundle. Inspect browser → decrypt mudah. UI klaim "AES encryption" menyesatkan. | `artifacts/dex-tools/src/lib/encryption.ts` | ✅ SELESAI | 10 Apr 2026 |
 | S-03 | 🟠 SERIUS | **API Key field fiktif** — Placeholder `dn_...` tanpa referensi di docs Dango. Tidak ada sistem API key publik dari Dango yang terdokumentasi. Bingungkan user. | `artifacts/dex-tools/src/pages/settings.tsx` | ✅ SELESAI | 10 Apr 2026 |
 
@@ -77,3 +77,4 @@
 | 10 Apr 2026 | Sesi 1 | Audit pertama — semua temuan diidentifikasi, tidak ada perubahan kode. Setup workflows (API Server + frontend), provisioning database, push schema Drizzle. Fixed: runtime error `bots.map is not a function` akibat DB belum ada. |
 | 10 Apr 2026 | Sesi 2 | Fix batch low-risk: T-01 (eventType UPPERCASE), D-01 (hapus hello.ts), D-02 (hapus dead `let query`), S-02 (hapus klaim AES enkripsi palsu → ganti warning jujur), S-03 (hapus field apiKey fiktif). Hapus 2 workflow duplikat penyebab konflik port. |
 | 10 Apr 2026 | Sesi 3 | Fix T-02 (hapus PnL chart palsu → pesan "no data"). Fix G-01 (buat rerangeScheduler.ts — auto-trigger tiap 60s per mode threshold). Fix G-02 (trigger-rerange pakai harga real dari CoinGecko, bukan midpoint). Ekstrak priceService.ts sebagai shared module. |
+| 10 Apr 2026 | Sesi 4 | Fix S-01 (hapus Wallet Private Key field EVM-style — tidak kompatibel dengan passkey Dango; tambah info card penjelasan). G-03 & G-04 pending: butuh akses API/SDK on-chain Dango (CLOB price feed + order cancellation) yang belum terdokumentasi publik. |

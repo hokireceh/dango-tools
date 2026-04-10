@@ -3,14 +3,12 @@ import { encryptData, decryptData } from "../lib/encryption";
 
 export interface ConnectionSettings {
   rpcEndpoint: string;
-  privateKey: string;
 }
 
 const SETTINGS_KEY = "dango_dex_secure_settings";
 
 const defaultSettings: ConnectionSettings = {
   rpcEndpoint: "",
-  privateKey: "",
 };
 
 export function useSettings() {
