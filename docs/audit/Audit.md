@@ -270,3 +270,165 @@ G-04 berubah status dari **BLOCKED** (tidak ada SDK) menjadi **SIAP DIRENCANAKAN
 
 ### Carry-over
 - **G-04** — SIAP DIRENCANAKAN (5 sub-sesi A-E, prerequisite = Session Key onboarding)
+
+---
+## Audit 2026-04-10 Sesi A (G-04 Sub-sesi A) — GraphQL Schema & Cancel Order Payload
+
+### Tujuan
+Konfirmasi format payload cancel_order via Dango GraphQL API.
+
+---
+
+### 1. GraphQL Mutation Schema
+
+Hasil introspeksi `api-mainnet.dango.zone/graphql`:
+
+```
+MUTATION: broadcastTxSync
+  ARG: tx: Tx  // "Transaction as JSON"
+  RETURN: JSON
+```
+
+**Temuan kritis**: Hanya ada **SATU mutation** di seluruh schema — `broadcastTxSync`.
+Tidak ada mutation khusus `cancelOrder`, `placeOrder`, dll. Semua operasi on-chain
+(deposit, withdraw, submit order, cancel order) menggunakan satu mutation ini.
+`Tx` adalah JSON schema-less — tidak ada typed input untuk args.
+
+---
+
+### 2. Format Pesan Cancel Order (§6.5)
+
+#### Single cancel (by order ID)
+```json
+{
+  "execute": {
+    "contract": "PERPS_CONTRACT",
+    "msg": {
+      "trade": {
+        "cancel_order": { "one": "42" }
+      }
+    },
+    "funds": {}
+  }
+}
+```
+- `"42"` adalah on-chain order ID (string)
+- Efek: release reserved_margin, decrement open_order_count
+
+#### Bulk cancel (semua order sekaligus)
+```json
+{
+  "execute": {
+    "contract": "PERPS_CONTRACT",
+    "msg": {
+      "trade": {
+        "cancel_order": "all"
+      }
+    },
+    "funds": {}
+  }
+}
+```
+- Cancel semua resting orders dalam satu transaksi
+- Lebih efisien untuk DELETE bot (semua order user di pair tersebut)
+
+---
+
+### 3. Full Tx Payload untuk broadcastTxSync
+
+```json
+mutation BroadcastTx($tx: Tx!) {
+  broadcastTxSync(tx: $tx)
+}
+```
+
+Variables:
+```json
+{
+  "tx": {
+    "sender": "<user_wallet_address>",
+    "gas_limit": 1500000,
+    "msgs": [ { "<cancel_order msg>" } ],
+    "data": {
+      "user_index": 0,
+      "chain_id": "dango-1",
+      "nonce": 42,
+      "expiry": null
+    },
+    "credential": {
+      "session": {
+        "session_info": {
+          "session_key": "02abc...33bytes",
+          "expire_at": "1700000000000000000"
+        },
+        "session_signature": "0102...40hex",
+        "authorization": {
+          "key_hash": "a1b2c3d4...64hex",
+          "signature": { "secp256k1": "0102...40hex" }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### 4. Signing Flow (§2.6–2.7)
+
+```
+1. Compose cancel_order message
+2. Query chain_id, user_index, next nonce dari account (unordered nonce, window 20)
+3. Simulate: kirim UnsignedTx (tanpa credential) → dapat gas_used
+4. Set gas_limit = gas_used + 770_000 (overhead signature verification)
+5. Build SignDoc = { data, gas_limit, messages, sender }
+6. Serialize SignDoc → canonical JSON (keys sorted alphabetically)
+7. Hash dengan SHA-256
+8. Sign hash dengan Session Key (Secp256k1) → 64-byte hex (session_signature)
+9. Build full Tx dengan session credential
+10. POST broadcastTxSync
+```
+
+---
+
+### 5. Contract Addresses (Mainnet §11)
+
+| Contract | Address |
+|----------|---------|
+| PERPS_CONTRACT | `0x90bc84df68d1aa59a857e04ed529e9a26edbea4f` |
+| ACCOUNT_FACTORY_CONTRACT | `0x18d28bafcdf9d4574f920ea004dea2d13ec16f6b` |
+| ORACLE_CONTRACT | `0xcedc5f73cbb963a48471b849c3650e6e34cd3b6d` |
+
+- Chain ID Mainnet: `dango-1`
+- GraphQL: `https://api-mainnet.dango.zone/graphql`
+
+---
+
+### 6. Yang Masih Perlu Dicari (Sesi B)
+
+| Item | Keterangan |
+|------|-----------|
+| Nonce query | GraphQL query untuk get account's seen_nonces |
+| Session key registration | Flow user buat session key on-chain (§3 account mgmt) |
+| key_hash format | Apakah SHA-256(pubkey) atau beda? |
+| Order ID tracking | Dango assign order_id saat submit_order — perlu disimpan di DB kita |
+| Session key storage | Harus encrypted di DB, user input sekali via bot/dashboard |
+
+---
+
+### 7. Kesimpulan Sesi A
+
+Format payload **sudah confirmed dan lengkap**. Implementasi G-04 secara teknis:
+- **Feasible** — tidak butuh SDK, semua via GraphQL JSON
+- **Bottleneck** = session key onboarding dan transaction signing dari scratch
+- Cancel single order = butuh on-chain order ID per grid level (belum ada di DB)
+- Cancel all = lebih mudah diimplementasikan dulu (tidak butuh order ID tracking)
+
+### Rekomendasi urutan implementasi
+1. **Sesi B** — Query nonce, simulate, dan session key registration flow
+2. **Sesi C** — Transaction builder + Secp256k1 signing (pure Node.js, pakai `@noble/secp256k1`)
+3. **Sesi D** — Schema DB: tambah kolom session key (terenkripsi) dan onChainOrderId
+4. **Sesi E** — Integrasi ke DELETE/toggle: kirim `cancel_order: "all"` dulu, lalu single cancel setelah tracking order ID tersedia
+
+### Carry-over
+- **G-04** — SIAP FIX bertahap. Sub-sesi B: query nonce + session key registration flow.
