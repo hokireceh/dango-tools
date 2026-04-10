@@ -157,6 +157,24 @@ router.post("/auth/login", async (req, res) => {
     return;
   }
 
+  // ── Admin shortcut ──────────────────────────────────────────────────────────
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "";
+  if (
+    ADMIN_PASSWORD &&
+    telegramId.trim().toLowerCase() === "admin" &&
+    password === ADMIN_PASSWORD
+  ) {
+    const farFuture = new Date();
+    farFuture.setFullYear(farFuture.getFullYear() + 10);
+    res.json({
+      token: ADMIN_PASSWORD,
+      expiresAt: farFuture.toISOString(),
+      plan: "admin",
+      amount: 0,
+    });
+    return;
+  }
+
   try {
     const [user] = await db
       .select()
