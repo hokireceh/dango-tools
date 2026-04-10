@@ -19,17 +19,17 @@ import { eq } from "drizzle-orm";
 // ===================== CONFIG =====================
 const BOT_TOKEN        = process.env.BOT_TOKEN ?? "";
 const ADMIN_CHAT_ID    = process.env.ADMIN_CHAT_ID ?? "";
-const SAWERIA_USERNAME = process.env.SAWERIA_USERNAME ?? "";
-const SAWERIA_USER_ID  = process.env.SAWERIA_USER_ID ?? "";
+const SAWERIA_USERNAME = process.env.SAWERIA_USERNAME ?? "zahwafe";
+const SAWERIA_USER_ID = process.env.SAWERIA_USER_ID ?? "d8e876df-405c-4e08-9708-9808b9037ea5";
 const CHECK_INTERVAL_MS = 7_000;
 const MAX_WAIT_MINUTES  = 15;
 const SAWERIA_API       = "https://backend.saweria.co";
 
 // ===================== PLANS =====================
 const PLANS = [
-  { id: "30d",  label: "⚡ 30 Hari",  days: 30,  amount: 50_000 },
-  { id: "60d",  label: "🔥 60 Hari",  days: 60,  amount: 100_000 },
-  { id: "90d",  label: "💎 90 Hari",  days: 90,  amount: 150_000 },
+  { id: "30d",  label: "⚡ 30 Hari",  days: 30,  amount: 40_000 },
+  { id: "60d",  label: "🔥 60 Hari",  days: 60,  amount: 70_000 },
+  { id: "90d",  label: "💎 90 Hari",  days: 90,  amount: 100_000 },
 ] as const;
 
 type PlanId = (typeof PLANS)[number]["id"];
