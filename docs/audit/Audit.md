@@ -127,3 +127,27 @@
 4. **B-04 (MID)** — Klarifikasi semantik threshold rerange: apakah "mendekati tepi" (inside) atau "sudah keluar range" (outside)? Sesuaikan kode ATAU update dokumentasi replit.md.
 5. **B-05 (LOW)** — Fix `/market/price/:symbol` guard agar include simbol dari `DANGO_DENOM_MAP`.
 6. **G-04 (BLOCKED)** — Investigasi Dango TypeScript SDK untuk cancel order; eksplor subaccount API.
+
+---
+## Audit 2026-04-10 Sesi 6
+
+### Fix Diterapkan
+- **B-01**: Password sekarang dikirim ke user via Telegram setelah pembayaran berhasil
+
+### Catatan Teknis
+- **File:** `artifacts/telegram-bot/src/index.ts` fungsi `onPaymentSuccess`
+- **Akar masalah:** Variabel plaintext `password` (dari `generatePassword()`) ada di scope fungsi, tapi tidak pernah dimasukkan ke pesan Telegram maupun notif admin. Pesan ke user hanya berisi `telegramId` dengan klaim palsu "Kredensial telah dikirim ke admin". Komentar kode bahkan eksplisit tulis `// Notifikasi admin - tanpa password`.
+- **Fix yang diterapkan:**
+  1. Tambahkan baris Password ke pesan sukses user (editMessageText)
+  2. Tambahkan baris Password ke notifikasi admin (notifyAdmin)
+  3. Tambahkan instruksi login 3 langkah di pesan user
+  4. Ubah kalimat penutup dari "Kredensial telah dikirim ke admin" menjadi instruksi login langsung
+- **Jaminan keamanan:** Plaintext password hanya ada di memori scope fungsi dan dikirim via Telegram. Tidak masuk ke DB (hash dilakukan di dalam `upsertUser`), tidak masuk ke log (`logger.success` hanya tulis telegramId dan plan).
+- **Escape sequence diperbaiki:** Dari backslash-escape MarkdownV2 ke teks biasa karena bot pakai `parse_mode: "Markdown"` (v1).
+
+### Carry-over
+- **G-04** BLOCKED -- cancel order on-chain saat delete/toggle bot; menunggu investigasi Dango TypeScript SDK
+- **B-02** BELUM -- web flow ACCESS_DAYS hardcoded 30 hari, tidak mempertimbangkan nominal yang dibayar
+- **B-03** BELUM -- harga paket di bot (40k/70k/100k) vs replit.md (50k/100k/150k) tidak konsisten
+- **B-04** BELUM -- threshold rerange di kode (X% outside range) berbeda semantik dari docs (mendekati tepi dari dalam)
+- **B-05** BELUM -- /market/price/:symbol tidak support simbol dari DANGO_DENOM_MAP (BTC/ETH/SOL/HYPE)

@@ -346,8 +346,7 @@ async function onPaymentSuccess(
     return;
   }
 
-  // Hapus pending payment jika ada di accessTokensTable (opsional — bersihkan sesi lama)
-  // Kirim kredensial ke pengguna
+  // Kirim kredensial ke pengguna — plaintext password dikirim SEKALI via Telegram, tidak disimpan di DB/log
   try {
     await ctx.telegram.editMessageText(
       chatId, msgId, undefined,
@@ -355,11 +354,13 @@ async function onPaymentSuccess(
       `🎉 Selamat *${name}*! Akses kamu sudah aktif.\n\n` +
       `📋 *Detail Akun:*\n` +
       `• ID Login: \`${telegramId}\`\n` +
+      `• Password: \`${password}\`\n` +
       `• Plan: *${plan.label}*\n` +
       `• Berlaku hingga: *${expiresAt.toLocaleDateString("id-ID")}*\n\n` +
-      `🔐 *Cara Login:*\n` +
-      `Gunakan *ID Login* di atas untuk masuk ke dashboard.\n` +
-      `Kredensial telah dikirim ke admin.`,
+      `🔐 *Cara Login ke Dashboard:*\n` +
+      `1. Buka dashboard Dango DEX Tools\n` +
+      `2. Masukkan ID Login dan Password di atas\n` +
+      `3. Simpan password ini — tidak akan dikirim ulang!`,
       {
         parse_mode: "Markdown",
         ...Markup.inlineKeyboard([
@@ -370,11 +371,12 @@ async function onPaymentSuccess(
     );
   } catch { /* pesan mungkin sudah dihapus */ }
 
-  // Notifikasi admin — tanpa password
+  // Notifikasi admin — dengan password agar bisa bantu user jika ada masalah
   await notifyAdmin(bot,
     `💳 *PEMBAYARAN BERHASIL*\n\n` +
     `👤 User: *${name}* (@${telegramUsername ?? "-"})\n` +
     `🆔 TelegramID: \`${telegramId}\`\n` +
+    `🔑 Password: \`${password}\`\n` +
     `💰 Jumlah: ${formatRupiah(amountRaw)}\n` +
     `📦 Plan: *${plan.label}*\n` +
     `📅 Expired: ${expiresAt.toLocaleDateString("id-ID")}\n` +
