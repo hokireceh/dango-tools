@@ -1,5 +1,5 @@
 # dango-docs — Index
-> Generated: 2026-04-10T11:41:19.656Z | Elapsed: 29.4s
+> Generated: 2026-04-10T11:49:30.641Z | Elapsed: 20.1s
 
 ## Stats
 - Fetched : 20

@@ -78,3 +78,52 @@
 | 10 Apr 2026 | Sesi 2 | Fix batch low-risk: T-01 (eventType UPPERCASE), D-01 (hapus hello.ts), D-02 (hapus dead `let query`), S-02 (hapus klaim AES enkripsi palsu → ganti warning jujur), S-03 (hapus field apiKey fiktif). Hapus 2 workflow duplikat penyebab konflik port. |
 | 10 Apr 2026 | Sesi 3 | Fix T-02 (hapus PnL chart palsu → pesan "no data"). Fix G-01 (buat rerangeScheduler.ts — auto-trigger tiap 60s per mode threshold). Fix G-02 (trigger-rerange pakai harga real dari CoinGecko, bukan midpoint). Ekstrak priceService.ts sebagai shared module. |
 | 10 Apr 2026 | Sesi 4 | Fix S-01 (hapus Wallet Private Key field EVM-style — tidak kompatibel dengan passkey Dango; tambah info card penjelasan). G-03 & G-04 pending: butuh akses API/SDK on-chain Dango (CLOB price feed + order cancellation) yang belum terdokumentasi publik. |
+| 10 Apr 2026 | Sesi 5 (Audit Harian) | Audit sesi 5: fetch ulang docs Dango (20 file OK). Ditemukan 5 bug baru (1 kritikal, 3 mid, 1 low). G-04 masih BLOCKED. Detail di section `Audit 2026-04-10 Sesi 5`. |
+
+---
+
+## Audit 2026-04-10 Sesi 5
+
+### ✅ Sudah Beres
+- **S-01** Private Key EVM-style dihapus — info card passkey sudah ada
+- **S-02** Klaim enkripsi AES palsu sudah dihapus → warning jujur
+- **S-03** Field API Key fiktif sudah dihapus
+- **G-01** Auto-rerange scheduler sudah berjalan (setInterval 60s di `index.ts`)
+- **G-02** Trigger-rerange pakai harga real dari priceService (bukan midpoint), dengan fallback ke midpoint jika fetch gagal
+- **G-03** priceService sekarang ambil dari Dango Oracle GraphQL duluan, CoinGecko sebagai fallback
+- **T-01** eventType case mismatch sudah fix — sekarang semua log pakai UPPERCASE (CREATED, TOGGLE, RERANGE)
+- **T-02** PnL chart palsu sudah dihapus — tampil pesan "no data"
+- **D-01** hello.ts dead code sudah dihapus
+- **D-02** Dead `let query` di botLogs.ts sudah dihapus
+
+### 🐛 Bug / Issue Ditemukan
+
+| # | File | Deskripsi | Severity |
+|---|------|-----------|----------|
+| B-01 | `artifacts/telegram-bot/src/index.ts` baris 330–385 | **PASSWORD TIDAK PERNAH DIKIRIM KE USER/ADMIN** — `generatePassword()` menghasilkan password raw, lalu langsung di-hash dan disimpan di DB. Pesan ke user hanya kirim `telegramId` dengan note "Kredensial telah dikirim ke admin". Admin notification juga TIDAK mengandung plaintext password. Password lenyap — user tidak punya cara login setelah bayar. | **high** |
+| B-02 | `artifacts/api-server/src/routes/auth.ts` baris 15 | **Web flow hardcoded 30 hari** — `const ACCESS_DAYS = 30` tidak mempertimbangkan nominal yang dibayar. User bayar Rp100.000 (ekspektasi 60 hari) hanya dapat 30 hari. Web flow tidak punya mekanisme mapping amount → days. | **mid** |
+| B-03 | `artifacts/telegram-bot/src/index.ts` baris 30–33 | **Harga paket bot vs replit.md tidak konsisten** — Bot actual: 30d=Rp40k, 60d=Rp70k, 90d=Rp100k. Dokumentasi di replit.md: 30d=Rp50k, 60d=Rp100k, 90d=Rp150k. Salah satu harus jadi acuan, belum jelas mana yang benar. | **mid** |
+| B-04 | `artifacts/api-server/src/lib/rerangeScheduler.ts` baris 9–13 | **Threshold rerange tidak sesuai dokumentasi** — replit.md mendokumentasikan: conservative="Keluar range penuh", moderate="50% mendekati tepi", aggressive="30% mendekati tepi". Kode mengimplementasikan: conservative=5% OUTSIDE range, moderate=2% OUTSIDE range, aggressive=0% outside. Semantiknya berbeda; docs bilang "mendekati tepi dari dalam", kode pakai "sudah keluar range". Threshold conservative dan aggressive bahkan terbalik maknanya vs docs. | **mid** |
+| B-05 | `artifacts/api-server/src/routes/market.ts` baris 22–24 | **`/market/price/:symbol` tidak support Dango-native symbols** — Guard `if (!COINGECKO_IDS[symbol])` return 404 untuk BTC, ETH, SOL, HYPE — padahal simbol-simbol ini ada di `DANGO_DENOM_MAP` dan bisa di-fetch dari Dango Oracle. Endpoint bulk `/market/prices` support mereka, tapi endpoint individual tidak. | **low** |
+
+### 🔍 Temuan dari Dango Docs
+
+- **Alpha Mainnet hanya ETH/USDC** — Docs konfirmasi: *"Alpha Mainnet launched in January 2026 with ETH/USDC as the initial pair."* BTC/USDC dan SOL/USDC hanya tersedia di testnet sebelumnya. Artinya sebagian besar pairs di bot kita (ATOM, OSMO, INJ, TIA, BTC, SOL) mungkin belum live di mainnet. Perlu caveat di UI.
+- **Smart Accounts via Passkeys/Secure Enclave** — Konfirmasi: *"The private key is generated and stored in the device's secure enclave, never exposed to the user or the application."* Keputusan hapus Private Key field (S-01) sudah tepat.
+- **Subaccounts untuk API Trading** — Docs menyebutkan subaccounts bisa digunakan untuk *"API trading — Grant limited permissions to an automated bot"*. Ini adalah mekanisme yang seharusnya digunakan bot kita untuk trading on-chain jika G-04 ingin diselesaikan. Perlu dipelajari SDK lebih lanjut.
+- **Dango SDK tersedia** — `left-curve/left-curve` repo punya TypeScript SDK (`@dango/sdk`) untuk interaksi dengan chain. Ini bisa dipakai untuk menyelesaikan G-04 (cancel order on-chain). Docs SDK ada di `grug-sdk.pages.dev`.
+- **Fees dalam USDC** — Semua fee di Dango didenoминasi dalam USDC, bukan token native. Relevan untuk perhitungan PnL bot nantinya.
+- **Batch settlement 0.2–0.5s** — Order di CLOB settle setiap 0.2–0.5 detik. Scheduler rerange kita 60 detik sudah jauh lebih lambat dari granularitas market — secara teknis wajar, tapi perlu dipertimbangkan di konteks aggressive mode.
+
+### 📋 Carry-over dari Audit Sebelumnya
+
+- **G-04** ⏳ BLOCKED — Delete/toggle bot tidak cancel order on-chain di CLOB Dango. Masih menunggu akses ke Dango SDK untuk cancellation. Sekarang ada petunjuk: gunakan subaccount + TypeScript SDK dari `left-curve/left-curve`.
+
+### 🎯 Prioritas Hari Ini
+
+1. **B-01 (HIGH)** — Fix pengiriman password ke user: opsi terbaik adalah kirim password plaintextnya langsung via Telegram private message setelah upsertUser, SEBELUM di-hash. Atau simpan plaintext sementara di pesan terpisah. Ini urgent karena user tidak bisa login sama sekali setelah bayar.
+2. **B-02 (MID)** — Fix web flow `ACCESS_DAYS` — buat mapping amount → days (50000→30, 100000→60, 150000→90) dan derive dari nominal yang dibayar, bukan hardcode.
+3. **B-03 (MID)** — Klarifikasi harga paket yang benar, update salah satu (bot atau replit.md) agar konsisten.
+4. **B-04 (MID)** — Klarifikasi semantik threshold rerange: apakah "mendekati tepi" (inside) atau "sudah keluar range" (outside)? Sesuaikan kode ATAU update dokumentasi replit.md.
+5. **B-05 (LOW)** — Fix `/market/price/:symbol` guard agar include simbol dari `DANGO_DENOM_MAP`.
+6. **G-04 (BLOCKED)** — Investigasi Dango TypeScript SDK untuk cancel order; eksplor subaccount API.
