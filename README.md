@@ -315,9 +315,9 @@ server {
 
 > **Catatan**: Password hanya dikirim sekali via Telegram saat pembayaran berhasil. Simpan baik-baik. Jika lupa, user perlu membeli langganan baru atau menghubungi admin untuk reset.
 
-
-
-### 
+---
+## Ini prompt-nya, tinggal paste ke Replit AI agent:
+```
 Kamu adalah auditor harian untuk proyek Hokireceh Projects (Sepi Bukan Sapi).
 
 ## LANGKAH WAJIB — jalankan berurutan, jangan skip
@@ -361,3 +361,4 @@ Append section baru di bawah isi sebelumnya (JANGAN overwrite), dengan format:
 - Jangan klaim akses URL eksternal secara langsung, selalu pakai fetch-dango.js
 - Kalau ada konflik antara docs Dango dan implementasi kita, flagging sebagai temuan
 - Carry-over wajib disertakan supaya tidak ada issue yang hilang antar sesi
+```
