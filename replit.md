@@ -22,6 +22,7 @@ Platform web DEX Tools untuk trader Dango Exchange (CLOB on-chain). Mencakup Gri
 
 ## Key Features
 
+- **Login Page**: Halaman login dengan Telegram ID + password; redirect otomatis ke `/login` jika tidak terautentikasi; token disimpan di localStorage; global 401 handler otomatis logout
 - **Dashboard**: Total bots, PnL, rerange stats, recent activity, top performer
 - **Grid Bot List**: CRUD bot, toggle aktif/nonaktif, PnL per bot
 - **Grid Bot Detail**: Info lengkap, log aktivitas, chart simulasi, trigger rerange manual
@@ -64,8 +65,8 @@ Mode aggressive memiliki warning tooltip di UI.
 4. Bot polling status pembayaran setiap 7 detik (max 15 menit)
 5. Jika sukses:
    - `upsertUser()` — simpan/update user di DB dengan password baru (bcrypt-hashed)
-   - Kirim kredensial (telegramId + password) ke user
-   - Kirim notifikasi admin (include password plaintext)
+   - Kirim Telegram ID saja ke user (password TIDAK dikirim via Telegram)
+   - Kirim notifikasi admin (tanpa password — hanya info user & plan)
 6. User login ke dashboard: `POST /api/auth/login { telegramId, password }`
 7. Endpoint return Bearer token → dipakai untuk akses API
 
