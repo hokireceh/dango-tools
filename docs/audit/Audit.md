@@ -200,3 +200,73 @@
 
 ### Carry-over
 - **G-04** BLOCKED -- cancel order on-chain saat delete/toggle bot; menunggu investigasi Dango TypeScript SDK
+---
+## Audit 2026-04-10 Sesi 9
+
+### Investigasi G-04 — Dango SDK untuk Cancel Order On-Chain
+
+#### SDK Status: TIDAK TERSEDIA di npm
+
+| Package | npm Status | Keterangan |
+|---------|-----------|------------|
+| `@dango/sdk` | 404 NOT FOUND | Tidak pernah dipublish ke npm |
+| `@grug/sdk` | 404 NOT FOUND | Tidak pernah dipublish ke npm |
+| `@left-curve/crypto` | v0.1.0 (2024-11-27) | Hanya crypto utils, bukan CLOB SDK |
+| `@left-curve/encoding` | v0.1.0 (2024-11-27) | Hanya encoding helpers |
+| `@left-curve/utils` | v0.1.0 (2024-11-27) | Hanya general utilities |
+
+SDK TypeScript yang proper ada di `sdk/` directory monorepo `left-curve/left-curve` di GitHub, tapi belum dipublish ke npm. Harus di-build manual dari source.
+
+#### Temuan Kritis dari Dango Docs
+
+**1. GraphQL adalah satu-satunya interface on-chain:**
+> "All interactions with the chain go through a single GraphQL endpoint that supports queries, mutations, and WebSocket subscriptions."
+- Endpoint yang sudah kita pakai (`api-mainnet.dango.zone/graphql`) sudah bisa untuk SEMUA operasi termasuk write/mutation
+- Ada `broadcastTxSync` mutation untuk submit transaksi bertanda tangan
+
+**2. Cancel order ada dua mode:**
+- **Single cancel** — cancel satu order by order ID, release reserved_margin, decrement open_order_count
+- **Bulk cancel** — cancel semua resting orders user dalam satu transaksi (lebih efisien)
+
+**3. Setiap write operation butuh signed transaction:**
+Lifecycle transaksi:
+1. Simulate (via GraphQL query `simulate`) — estimasi gas, skip signature verification
+2. Build SignDoc — hash dari transaksi
+3. Sign — dengan user's key (passkey/Secp256r1 atau Secp256k1)
+4. Broadcast (via GraphQL mutation `broadcastTxSync`)
+
+**4. Session Keys — mekanisme untuk API trading:**
+> "Session keys allow delegated signing without requiring the master key for every transaction."
+- User buat session key di Dango, simpan session key di server kita (terenkripsi)
+- Server tanda tangani cancel transaction dengan session key tersebut
+- Session key punya expiry time, scope terbatas, tidak bisa withdraw dana
+
+**5. AGENTS.md tidak relevan untuk G-04:**
+AGENTS.md adalah contributor guide internal untuk pengembang repo Rust/left-curve. Tidak ada info tentang TypeScript SDK usage untuk external apps.
+
+#### Blockers yang Tersisa
+
+| Blocker | Severity | Penjelasan |
+|---------|----------|------------|
+| Tidak ada npm SDK | HIGH | Harus implement transaction signing dari scratch |
+| Passkey signing butuh browser/WebAuthn | CRITICAL | Server-side signing hanya bisa pakai Session Key (Secp256k1) |
+| Session key flow belum ada | HIGH | User belum ada UI untuk grant session key ke bot |
+| Cancel order message format belum lengkap | MEDIUM | Perlu investigasi GraphQL schema untuk mutation cancel_order |
+| Order ID tracking belum ada di DB | MEDIUM | Saat ini tidak menyimpan on-chain order ID per grid level |
+
+#### Estimasi Effort
+
+G-04 BISA diimplementasikan, tapi butuh **minimal 4-5 sesi**:
+
+1. **Sesi A** — Fetch GraphQL schema Dango, temukan mutation cancel_order, verify payload format
+2. **Sesi B** — Implement session key onboarding (UI + bot command agar user bisa grant session key)
+3. **Sesi C** — Implement transaction builder: serialize WasmMsg cancel_order + SignDoc + Secp256k1 signing
+4. **Sesi D** — Tambah kolom `onChainOrderIds` di tabel gridBots, track order ID saat bot aktif
+5. **Sesi E** — Integrate cancel on DELETE/toggle: call GraphQL broadcastTxSync dengan signed cancel tx
+
+#### Kesimpulan
+
+G-04 berubah status dari **BLOCKED** (tidak ada SDK) menjadi **SIAP DIRENCANAKAN** (ada jalur implementasi via GraphQL + Session Key, tapi multi-sesi). Prerequisite paling kritis: mekanisme session key — tanpa ini tidak mungkin sign transaksi on-chain dari server.
+
+### Carry-over
+- **G-04** — SIAP DIRENCANAKAN (5 sub-sesi A-E, prerequisite = Session Key onboarding)

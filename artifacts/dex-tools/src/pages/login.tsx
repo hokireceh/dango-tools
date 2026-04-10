@@ -116,7 +116,7 @@ export default function Login() {
         <p className="text-center text-xs text-muted-foreground">
           Belum punya akses?{" "}
           <a
-            href="https://t.me/dangobot"
+            href="https://t.me/dangoexchangebot"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"
