@@ -9,6 +9,8 @@ import authRouter from "./auth";
 
 const router: IRouter = Router();
 
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "";
+
 async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
@@ -18,18 +20,28 @@ async function requireAuth(req: Request, res: Response, next: NextFunction) {
     return;
   }
 
+  // Admin password shortcut
+  if (ADMIN_PASSWORD && token === ADMIN_PASSWORD) {
+    next();
+    return;
+  }
+
   try {
+    // Check user session token in accessTokensTable
     const [record] = await db
       .select()
       .from(accessTokensTable)
       .where(eq(accessTokensTable.token, token));
 
-    if (!record || record.expiresAt < new Date()) {
-      res.status(401).json({ error: "Token tidak valid atau sudah kadaluarsa" });
+    if (record && record.expiresAt >= new Date()) {
+      next();
       return;
     }
 
-    next();
+    // Check user expiresAt via usersTable (token stored as telegramId+secret join)
+    // For Telegram login flow, the token references donationId in accessTokensTable
+    // which is already covered above. Fall through to 401.
+    res.status(401).json({ error: "Token tidak valid atau sudah kadaluarsa" });
   } catch {
     res.status(500).json({ error: "Auth check gagal" });
   }

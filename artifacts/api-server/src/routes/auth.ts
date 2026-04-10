@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
-import { db, accessTokensTable } from "@workspace/db";
+import bcrypt from "bcryptjs";
+import { db, accessTokensTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import {
   calculateAmount,
@@ -15,6 +16,7 @@ const ACCESS_DAYS = 30;
 const SUCCESS_STATUSES = new Set(["settlement", "success", "capture"]);
 const FAILED_STATUSES = new Set(["deny", "cancel", "failure", "expire"]);
 
+// ── Web-flow: initiate Saweria QRIS ──────────────────────────────────────────
 router.post("/auth/initiate", async (req, res) => {
   if (!isSaweriaConfigured()) {
     res.status(503).json({
@@ -50,6 +52,7 @@ router.post("/auth/initiate", async (req, res) => {
   }
 });
 
+// ── Web-flow: poll payment status ────────────────────────────────────────────
 router.get("/auth/poll/:donationId", async (req, res) => {
   const { donationId } = req.params;
   if (!donationId) {
@@ -105,6 +108,7 @@ router.get("/auth/poll/:donationId", async (req, res) => {
   }
 });
 
+// ── Web-flow: verify token ───────────────────────────────────────────────────
 router.post("/auth/verify", async (req, res) => {
   const { token } = req.body as { token?: string };
   if (!token) {
@@ -136,6 +140,63 @@ router.post("/auth/verify", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Token verify failed");
     res.status(500).json({ valid: false });
+  }
+});
+
+// ── Telegram-bot flow: login dengan password ──────────────────────────────────
+// POST /api/auth/login  { telegramId, password }
+// Mengembalikan Bearer token (UUID) yang disimpan di accessTokensTable.
+router.post("/auth/login", async (req, res) => {
+  const { telegramId, password } = req.body as {
+    telegramId?: string;
+    password?: string;
+  };
+
+  if (!telegramId || !password) {
+    res.status(400).json({ error: "telegramId dan password diperlukan" });
+    return;
+  }
+
+  try {
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.telegramId, String(telegramId)));
+
+    if (!user) {
+      res.status(401).json({ error: "Akun tidak ditemukan" });
+      return;
+    }
+
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) {
+      res.status(401).json({ error: "Password salah" });
+      return;
+    }
+
+    if (user.expiresAt < new Date()) {
+      res.status(403).json({ error: "Akses sudah kadaluarsa. Perpanjang langganan kamu." });
+      return;
+    }
+
+    // Buat session token baru dan simpan di accessTokensTable
+    const token = randomUUID();
+    await db.insert(accessTokensTable).values({
+      token,
+      donationId: `tg_login_${telegramId}_${Date.now()}`,
+      amount: user.amount,
+      expiresAt: user.expiresAt,
+    });
+
+    res.json({
+      token,
+      expiresAt: user.expiresAt.toISOString(),
+      plan: user.plan,
+      amount: user.amount,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Login failed");
+    res.status(500).json({ error: "Login gagal, coba lagi." });
   }
 });
 
