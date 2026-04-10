@@ -12,7 +12,23 @@ import {
 
 const router = Router();
 
-const ACCESS_DAYS = 30;
+// Mapping nominal → durasi akses (sesuai harga resmi Telegram Bot)
+const AMOUNT_TO_DAYS: Record<number, number> = {
+  40000: 30,
+  70000: 60,
+  100000: 90,
+};
+
+function getAccessDays(amount: number): number {
+  if (AMOUNT_TO_DAYS[amount]) return AMOUNT_TO_DAYS[amount];
+  // fallback: floor ke plan terdekat di bawahnya
+  const tiers = Object.keys(AMOUNT_TO_DAYS)
+    .map(Number)
+    .sort((a: number, b: number) => a - b);
+  const matched = [...tiers].reverse().find((t) => amount >= t);
+  return matched ? AMOUNT_TO_DAYS[matched] : 30;
+}
+
 const SUCCESS_STATUSES = new Set(["settlement", "success", "capture"]);
 const FAILED_STATUSES = new Set(["deny", "cancel", "failure", "expire"]);
 
@@ -25,15 +41,15 @@ router.post("/auth/initiate", async (req, res) => {
     return;
   }
 
-  const { amount = 50000, name = "user", email = "user@hokireceh.app" } = req.body as {
+  const { amount = 40000, name = "user", email = "user@hokireceh.app" } = req.body as {
     amount?: number;
     name?: string;
     email?: string;
   };
 
-  const ALLOWED = [50000, 100000, 150000];
+  const ALLOWED = [40000, 70000, 100000];
   if (!ALLOWED.includes(amount)) {
-    res.status(400).json({ error: "Nominal tidak valid. Pilih: 50000, 100000, atau 150000." });
+    res.status(400).json({ error: "Nominal tidak valid. Pilih: 40000, 70000, atau 100000." });
     return;
   }
 
@@ -73,7 +89,7 @@ router.get("/auth/poll/:donationId", async (req, res) => {
     if (SUCCESS_STATUSES.has(statusLower)) {
       const token = randomUUID();
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + ACCESS_DAYS);
+      expiresAt.setDate(expiresAt.getDate() + getAccessDays(payment.amount));
 
       await db.insert(accessTokensTable).values({
         token,

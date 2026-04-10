@@ -85,9 +85,9 @@ Admin login: set `ADMIN_PASSWORD` env var. Gunakan `Bearer {ADMIN_PASSWORD}` di 
 
 | Plan | Durasi | Harga |
 |------|--------|-------|
-| 30d  | 30 hari | Rp 50.000 |
-| 60d  | 60 hari | Rp 100.000 |
-| 90d  | 90 hari | Rp 150.000 |
+| 30d  | 30 hari | Rp 40.000 |
+| 60d  | 60 hari | Rp 70.000 |
+| 90d  | 90 hari | Rp 100.000 |
 
 ## Environment Variables
 

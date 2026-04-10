@@ -151,3 +151,27 @@
 - **B-03** BELUM -- harga paket di bot (40k/70k/100k) vs replit.md (50k/100k/150k) tidak konsisten
 - **B-04** BELUM -- threshold rerange di kode (X% outside range) berbeda semantik dari docs (mendekati tepi dari dalam)
 - **B-05** BELUM -- /market/price/:symbol tidak support simbol dari DANGO_DENOM_MAP (BTC/ETH/SOL/HYPE)
+---
+## Audit 2026-04-10 Sesi 7
+
+### Fix Diterapkan
+- **B-02**: Access days sekarang di-derive dari nominal bayar via mapping AMOUNT_TO_DAYS
+- **B-03**: Harga paket disinkronkan — acuan: **bot** (40k/70k/100k). replit.md sudah diupdate.
+
+### Catatan Teknis
+**B-02 — `artifacts/api-server/src/routes/auth.ts`:**
+- Hapus `const ACCESS_DAYS = 30` yang hardcoded
+- Tambah `const AMOUNT_TO_DAYS: Record<number, number> = { 40000: 30, 70000: 60, 100000: 90 }`
+- Tambah fungsi `getAccessDays(amount)` dengan fallback floor ke tier terdekat di bawahnya
+- Ganti `expiresAt.setDate(getDate() + ACCESS_DAYS)` dengan `getAccessDays(payment.amount)`
+- Update default amount di `/auth/initiate`: 50000 -> 40000
+- Update array ALLOWED: [50000,100000,150000] -> [40000,70000,100000]
+- Update error message nominal agar sesuai nilai baru
+
+**B-03 — `replit.md`:**
+- Update tabel Paket Akses: 50k/100k/150k -> 40k/70k/100k
+
+### Carry-over
+- **G-04** BLOCKED -- cancel order on-chain saat delete/toggle bot; menunggu investigasi Dango TypeScript SDK
+- **B-04** BELUM -- threshold rerange di kode (X% outside range) berbeda semantik dari docs (mendekati tepi dari dalam)
+- **B-05** BELUM -- /market/price/:symbol tidak support simbol dari DANGO_DENOM_MAP (BTC/ETH/SOL/HYPE)
