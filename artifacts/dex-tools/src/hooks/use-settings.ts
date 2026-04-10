@@ -4,7 +4,6 @@ import { encryptData, decryptData } from "../lib/encryption";
 export interface ConnectionSettings {
   rpcEndpoint: string;
   privateKey: string;
-  apiKey: string;
 }
 
 const SETTINGS_KEY = "dango_dex_secure_settings";
@@ -12,14 +11,12 @@ const SETTINGS_KEY = "dango_dex_secure_settings";
 const defaultSettings: ConnectionSettings = {
   rpcEndpoint: "",
   privateKey: "",
-  apiKey: "",
 };
 
 export function useSettings() {
   const [settings, setSettingsState] = useState<ConnectionSettings>(defaultSettings);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from local storage
   useEffect(() => {
     try {
       const stored = localStorage.getItem(SETTINGS_KEY);
@@ -36,7 +33,6 @@ export function useSettings() {
     }
   }, []);
 
-  // Save to local storage
   const saveSettings = useCallback((newSettings: ConnectionSettings) => {
     try {
       const encrypted = encryptData(JSON.stringify(newSettings));

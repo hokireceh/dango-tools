@@ -15,11 +15,9 @@ router.get("/bot-logs", async (req, res) => {
     return;
   }
 
-  let query = db.select().from(botLogsTable).orderBy(desc(botLogsTable.createdAt)).limit(parsed.data.limit ?? 50);
-
   const logs = parsed.data.botId
     ? await db.select().from(botLogsTable).where(eq(botLogsTable.botId, parsed.data.botId)).orderBy(desc(botLogsTable.createdAt)).limit(parsed.data.limit ?? 50)
-    : await query;
+    : await db.select().from(botLogsTable).orderBy(desc(botLogsTable.createdAt)).limit(parsed.data.limit ?? 50);
 
   res.json(
     logs.map((log) => ({

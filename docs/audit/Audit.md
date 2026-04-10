@@ -21,8 +21,8 @@
 | # | Tingkat | Masalah | File | Status | Tanggal Fix |
 |---|---------|---------|------|--------|-------------|
 | S-01 | 🔴 KRITIKAL | **Private Key field tidak kompatibel dengan Dango** — Placeholder `0x...` (EVM-style) bertentangan dengan docs Dango: *"keyless system with passkeys/biometrics"*. Tidak ada signing via passkey di kode. User share private key sensitif tanpa manfaat. | `artifacts/dex-tools/src/pages/settings.tsx` | ⏳ BELUM | — |
-| S-02 | 🔴 KRITIKAL | **Enkripsi AES hardcoded = zero security** — `encryption.ts:6` menggunakan `STORAGE_ENCRYPTION_KEY = "DANGO_DEX_LOCAL_SECURE_KEY_998877"` yang terekspos di JS bundle. Inspect browser → decrypt mudah. UI klaim "AES encryption" menyesatkan. | `artifacts/dex-tools/src/lib/encryption.ts` | ⏳ BELUM | — |
-| S-03 | 🟠 SERIUS | **API Key field fiktif** — Placeholder `dn_...` tanpa referensi di docs Dango. Tidak ada sistem API key publik dari Dango yang terdokumentasi. Bingungkan user. | `artifacts/dex-tools/src/pages/settings.tsx` | ⏳ BELUM | — |
+| S-02 | 🔴 KRITIKAL | **Enkripsi AES hardcoded = zero security** — `encryption.ts:6` menggunakan `STORAGE_ENCRYPTION_KEY = "DANGO_DEX_LOCAL_SECURE_KEY_998877"` yang terekspos di JS bundle. Inspect browser → decrypt mudah. UI klaim "AES encryption" menyesatkan. | `artifacts/dex-tools/src/lib/encryption.ts` | ✅ SELESAI | 10 Apr 2026 |
+| S-03 | 🟠 SERIUS | **API Key field fiktif** — Placeholder `dn_...` tanpa referensi di docs Dango. Tidak ada sistem API key publik dari Dango yang terdokumentasi. Bingungkan user. | `artifacts/dex-tools/src/pages/settings.tsx` | ✅ SELESAI | 10 Apr 2026 |
 
 ---
 
@@ -50,8 +50,8 @@
 
 | # | File | Deskripsi | Status | Tanggal Fix |
 |---|------|-----------|--------|-------------|
-| D-01 | `scripts/src/hello.ts` | Hanya `console.log("Hello from @workspace/scripts")`. Tidak dipanggil dari manapun, tidak ada fungsi. | ⏳ BELUM | — |
-| D-02 | `artifacts/api-server/src/routes/botLogs.ts` (baris 18) | `let query = db.select()...` dibuat tapi discarded setiap kali `botId` ada (path tersering). Variable tidak pernah digunakan di path utama. | ⏳ BELUM | — |
+| D-01 | `scripts/src/hello.ts` | Hanya `console.log("Hello from @workspace/scripts")`. Tidak dipanggil dari manapun, tidak ada fungsi. | ✅ SELESAI | 10 Apr 2026 |
+| D-02 | `artifacts/api-server/src/routes/botLogs.ts` (baris 18) | `let query = db.select()...` dibuat tapi discarded setiap kali `botId` ada (path tersering). Variable tidak pernah digunakan di path utama. | ✅ SELESAI | 10 Apr 2026 |
 
 ---
 
@@ -75,3 +75,4 @@
 | Tanggal | Sesi | Yang Dikerjakan |
 |---------|------|----------------|
 | 10 Apr 2026 | Sesi 1 | Audit pertama — semua temuan diidentifikasi, tidak ada perubahan kode. Setup workflows (API Server + frontend), provisioning database, push schema Drizzle. Fixed: runtime error `bots.map is not a function` akibat DB belum ada. |
+| 10 Apr 2026 | Sesi 2 | Fix batch low-risk: T-01 (eventType UPPERCASE), D-01 (hapus hello.ts), D-02 (hapus dead `let query`), S-02 (hapus klaim AES enkripsi palsu → ganti warning jujur), S-03 (hapus field apiKey fiktif). Hapus 2 workflow duplikat penyebab konflik port. |
