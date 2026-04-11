@@ -432,3 +432,170 @@ Format payload **sudah confirmed dan lengkap**. Implementasi G-04 secara teknis:
 
 ### Carry-over
 - **G-04** — SIAP FIX bertahap. Sub-sesi B: query nonce + session key registration flow.
+
+---
+## Audit 2026-04-11 Sesi B (G-04 Sub-sesi B) — Nonce Query, Session Key Registration Flow, key_hash
+
+### Tujuan
+Memetakan: cara query nonce, cara user authorize session key, format key_hash.
+
+---
+
+### 1. Temuan — Session Key TIDAK Butuh Registrasi On-Chain
+
+Ini berbeda dari asumsi awal. Session credential Dango bersifat self-contained:
+
+```json
+{
+  "session": {
+    "session_info": {
+      "session_key": "02abc...33bytes",
+      "expire_at": "1700000000000000000"
+    },
+    "session_signature": "0102...40hex",
+    "authorization": {
+      "key_hash": "<SHA256(master_pubkey)>",
+      "signature": { "secp256k1": "0102...40hex" }
+    }
+  }
+}
+```
+
+Field `authorization` adalah tanda tangan master key (passkey) atas `session_info`.
+**Artinya: tidak perlu transaksi on-chain terpisah untuk mendaftarkan session key.**
+Authorization disertakan langsung di setiap transaksi yang menggunakan session key.
+
+---
+
+### 2. Flow Onboarding Session Key (1x per user)
+
+```
+1. SERVER: Generate Secp256k1 keypair
+   - privkey: 32 bytes random
+   - pubkey:  compressed 33 bytes (02... atau 03...)
+
+2. SERVER → FRONTEND: kirim { session_key: hex(pubkey), expire_at: "<nanoseconds>" }
+
+3. FRONTEND:
+   a. Serialize session_info ke canonical JSON (keys alphabetical)
+   b. SHA-256(canonical JSON bytes)
+   c. Minta user sign hash dengan passkey (WebAuthn / Touch ID)
+   d. Build authorization = { key_hash: SHA256(master_pubkey), signature: { passkey: {...} } }
+
+4. FRONTEND → SERVER: kirim authorization
+
+5. SERVER: simpan di DB (encrypted):
+   - session_privkey (32 bytes hex)
+   - session_pubkey  (33 bytes hex)
+   - session_expire_at (nanosecond timestamp)
+   - authorization (JSON, ditandatangani oleh user's master key)
+```
+
+Setelah step 5, server bisa sign transaksi cancel tanpa interaksi user.
+
+---
+
+### 3. key_hash Computation
+
+Dari docs §3.7 (Query users by key):
+
+| Key type | Input ke SHA-256 |
+|----------|-----------------|
+| SECP256K1 | Compressed public key bytes (33 bytes) |
+| SECP256R1 | WebAuthn credential ID bytes |
+| ETHEREUM | UTF-8 bytes dari lowercase hex address (dengan 0x prefix) |
+
+Hasil hash di-hex-encode dalam **UPPERCASE**.
+
+Untuk session key (Secp256k1):
+```
+key_hash = SHA256(Buffer.from(compressed_pubkey_hex, 'hex')).toString('hex').toUpperCase()
+```
+
+Untuk master key (Passkey/Secp256r1): key_hash dari WebAuthn credential ID bytes.
+
+---
+
+### 4. Nonce Query
+
+**Account factory QueryMsg variants** (dikonfirmasi via GraphQL error):
+```
+code_hash | next_user_index | next_account_index | user | users | account | accounts | forgot_username
+```
+
+Tidak ada variant `nonces` di account factory. Nonces di-track per user account contract.
+
+**Format query account** (dikonfirmasi format benar):
+```graphql
+query {
+  queryApp(request: {
+    wasm_smart: {
+      contract: "0x<USER_WALLET_ADDRESS>",
+      msg: { "nonces": {} }
+    }
+  })
+}
+```
+
+Format ini perlu diuji dengan alamat user wallet yang valid (bukan account factory).
+Kemungkinan response: array of u32 seen nonces. Next nonce = max(seen_nonces) + 1.
+
+**Alternatif pragmatis (tidak butuh on-chain query):**
+- Simpan `lastNonce` per user di DB (integer), mulai dari 1
+- Increment setiap kali kirim cancel tx
+- Kalau tx gagal karena nonce conflict → retry dengan lastNonce + 1
+- Cocok untuk kasus kita (cancel frekuensi rendah, bukan HFT)
+
+---
+
+### 5. queryStatus — Konfirmasi Chain ID Live
+
+```graphql
+query {
+  queryStatus {
+    block { blockHeight timestamp hash }
+    chainId
+  }
+}
+```
+
+Response live (dikonfirmasi):
+```json
+{
+  "queryStatus": {
+    "block": {
+      "blockHeight": 17349828,
+      "timestamp": "2026-04-11T10:53:05.287845015",
+      "hash": "BCBADAD3ADE89EDB..."
+    },
+    "chainId": "dango-1"
+  }
+}
+```
+
+Chain ID confirmed: `dango-1` (konsisten dengan §11 Constants).
+
+---
+
+### 6. Ringkasan Kebutuhan Implementasi (Sesi C)
+
+| Komponen | Library | Keterangan |
+|----------|---------|-----------|
+| Secp256k1 sign | `@noble/secp256k1` | Pure Node.js, zero-dep, battle-tested |
+| SHA-256 | Node.js built-in `crypto.createHash('sha256')` | Tidak perlu library |
+| Canonical JSON | Sort keys alphabetically | Bisa DIY atau pakai `json-stable-stringify` |
+| GraphQL broadcast | `node-fetch` / `fetch` | Sudah ada di project |
+
+Estimasi: Sesi C bisa build transaction builder dalam satu file `dangoTxBuilder.ts` (~100 baris).
+
+---
+
+### 7. Yang Perlu Diputuskan Sebelum Sesi C
+
+1. **Session key expiry**: berapa lama? Rekomendasi: 30 hari (dikonfirmasi user saat renewal)
+2. **Nonce approach**: DB counter atau on-chain query? Rekomendasi: DB counter dulu (pragmatis)
+3. **Encrypt session key di DB**: pakai `AES-256-GCM` dengan key dari env var, atau simpan plain (hanya bisa cancel, tidak bisa transfer dana)?
+4. **User flow**: bot command `/session_key` untuk request authorization dari user, atau form di dashboard?
+
+### Carry-over
+- **G-04 Sesi C** — SIAP: Build `dangoTxBuilder.ts` (Secp256k1 sign + canonical JSON + broadcastTxSync)
