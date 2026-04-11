@@ -6,6 +6,7 @@ import gridBotsRouter from "./gridBots";
 import botLogsRouter from "./botLogs";
 import marketRouter from "./market";
 import authRouter from "./auth";
+import sessionKeyRouter from "./sessionKey";
 
 const router: IRouter = Router();
 
@@ -55,5 +56,6 @@ router.use(requireAuth);
 router.use(gridBotsRouter);
 router.use(botLogsRouter);
 router.use(marketRouter);
+router.use(sessionKeyRouter);
 
 export default router;

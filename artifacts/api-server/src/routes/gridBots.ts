@@ -1,7 +1,9 @@
 import { Router } from "express";
-import { db, gridBotsTable, botLogsTable } from "@workspace/db";
+import { db, gridBotsTable, botLogsTable, dangoSessionTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { getPriceForPair } from "../lib/priceService";
+import { cancelAllOrders } from "../lib/dangoTxBuilder";
+import { logger } from "../lib/logger";
 import {
   CreateGridBotBody,
   UpdateGridBotBody,
@@ -11,6 +13,37 @@ import {
   ToggleGridBotParams,
   TriggerRerangeParams,
 } from "@workspace/api-zod";
+
+async function tryOnChainCancelAll(context: string): Promise<void> {
+  const [session] = await db.select().from(dangoSessionTable).limit(1);
+  if (!session || !session.authorization) {
+    logger.warn({ context }, "Cancel on-chain dilewati — session key belum disetup");
+    return;
+  }
+  const expireAtMs = Number(BigInt(session.expireAt) / 1_000_000n);
+  if (new Date(expireAtMs) < new Date()) {
+    logger.warn({ context }, "Cancel on-chain dilewati — session key sudah expired");
+    return;
+  }
+
+  const nextNonce = session.nonce + 1;
+  const result = await cancelAllOrders({
+    walletAddress: session.walletAddress,
+    userIndex: session.userIndex,
+    privkeyEnc: session.privkeyEnc,
+    pubkey: session.pubkey,
+    expireAt: session.expireAt,
+    authorization: session.authorization,
+    nonce: nextNonce,
+  });
+
+  if (result.success) {
+    await db.update(dangoSessionTable).set({ nonce: nextNonce, updatedAt: new Date() });
+    logger.info({ context, result: result.result }, "Cancel all orders on-chain berhasil");
+  } else {
+    logger.error({ context, error: result.error }, "Cancel all orders on-chain gagal — order di Dango mungkin masih aktif");
+  }
+}
 
 const router = Router();
 
@@ -118,6 +151,10 @@ router.delete("/grid-bots/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
+  const [bot] = await db.select().from(gridBotsTable).where(eq(gridBotsTable.id, parsed.data.id));
+  if (bot?.isActive) {
+    await tryOnChainCancelAll(`DELETE bot #${parsed.data.id} (${bot.pair})`);
+  }
   await db.delete(gridBotsTable).where(eq(gridBotsTable.id, parsed.data.id));
   res.status(204).send();
 });
@@ -133,9 +170,14 @@ router.post("/grid-bots/:id/toggle", async (req, res) => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  const newActive = !bot.isActive;
+  if (!newActive) {
+    await tryOnChainCancelAll(`TOGGLE-OFF bot #${bot.id} (${bot.pair})`);
+  }
+
   const [updated] = await db
     .update(gridBotsTable)
-    .set({ isActive: !bot.isActive, updatedAt: new Date() })
+    .set({ isActive: newActive, updatedAt: new Date() })
     .where(eq(gridBotsTable.id, parsed.data.id))
     .returning();
 
