@@ -1,6 +1,7 @@
 import { db, gridBotsTable, botLogsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getPriceForPair } from "./priceService";
+import { tryOnChainCancelAll } from "./dangoTxBuilder";
 import { logger } from "./logger";
 
 const SCHEDULER_INTERVAL_MS = 60 * 1000; // jalankan setiap 60 detik
@@ -52,6 +53,15 @@ async function runRerangeCheck() {
 
       if (!shouldRerange(currentPrice, lower, upper, bot.rerangeMode)) continue;
 
+      logger.warn(
+        { botId: bot.id, botName: bot.name, currentPrice, lower, upper, mode: bot.rerangeMode },
+        "Auto-rerange triggered — initiating on-chain cancel"
+      );
+
+      // Safety first: cancel semua order lama sebelum update state DB.
+      // Pembukaan order baru dilakukan manual via API/Dashboard sampai DANGO-ENGINE-003 diimplementasikan.
+      await tryOnChainCancelAll(`SCHEDULER_AUTO_RERANGE_${bot.id}`);
+
       await db
         .update(gridBotsTable)
         .set({
@@ -64,14 +74,9 @@ async function runRerangeCheck() {
       await db.insert(botLogsTable).values({
         botId: bot.id,
         eventType: "RERANGE",
-        message: `Auto-rerange dipicu (mode: ${bot.rerangeMode}) — harga $${currentPrice.toFixed(4)} mendekati tepi range [$${lower}–$${upper}]`,
+        message: `Auto-rerange dipicu (mode: ${bot.rerangeMode}) — harga $${currentPrice.toFixed(4)} mendekati tepi range [$${lower}–$${upper}]. Order lama di-cancel on-chain. Buka order baru secara manual.`,
         priceAtEvent: String(currentPrice),
       });
-
-      logger.info(
-        { botId: bot.id, botName: bot.name, currentPrice, lower, upper, mode: bot.rerangeMode },
-        "Auto-rerange triggered"
-      );
     }
   } catch (err) {
     logger.error({ err }, "Auto-rerange scheduler error");

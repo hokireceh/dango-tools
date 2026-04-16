@@ -1,6 +1,8 @@
 import { sha256 } from "@noble/hashes/sha256";
 import * as secp from "@noble/secp256k1";
 import { db, dangoSessionTable } from "@workspace/db";
+import { sql } from "drizzle-orm";
+import { logger } from "./logger";
 import {
   generateSessionKeypair,
   encryptPrivkey,
@@ -143,4 +145,47 @@ export async function cancelAllOrders(params: {
 export async function getActiveSession() {
   const [session] = await db.select().from(dangoSessionTable).limit(1);
   return session ?? null;
+}
+
+// Atomic on-chain cancel — safe to call from multiple concurrent contexts.
+// Nonce di-increment di DB secara atomic sebelum broadcast untuk mencegah race condition.
+// Jika broadcast gagal, nonce tetap ter-increment (nonce burn) — ini acceptable per desain Dango.
+// Setelah cancel berhasil, pembukaan order baru harus dilakukan secara manual via API/Dashboard
+// sampai modul openNewGrid diimplementasikan (DANGO-ENGINE-003).
+export async function tryOnChainCancelAll(context: string): Promise<void> {
+  const [updated] = await db
+    .update(dangoSessionTable)
+    .set({ nonce: sql`${dangoSessionTable.nonce} + 1`, updatedAt: new Date() })
+    .returning();
+
+  if (!updated || !updated.authorization) {
+    logger.warn({ context }, "Cancel on-chain dilewati — session key belum disetup");
+    return;
+  }
+  const expireAtMs = Number(BigInt(updated.expireAt) / 1_000_000n);
+  if (new Date(expireAtMs) < new Date()) {
+    logger.warn({ context }, "Cancel on-chain dilewati — session key sudah expired");
+    return;
+  }
+
+  const result = await cancelAllOrders({
+    walletAddress: updated.walletAddress,
+    userIndex: updated.userIndex,
+    privkeyEnc: updated.privkeyEnc,
+    pubkey: updated.pubkey,
+    expireAt: updated.expireAt,
+    authorization: updated.authorization,
+    nonce: updated.nonce,
+  });
+
+  if (result.success) {
+    logger.info({ context, result: result.result }, "Cancel all orders on-chain berhasil");
+    logger.warn(
+      { context },
+      "Auto-rerange cancel selesai — order lama sudah dibersihkan. " +
+      "Pembukaan order baru HARUS dilakukan manual via API/Dashboard (DANGO-ENGINE-003 belum diimplementasikan).",
+    );
+  } else {
+    logger.error({ context, error: result.error }, "Cancel all orders on-chain gagal — order di Dango mungkin masih aktif");
+  }
 }

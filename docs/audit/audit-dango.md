@@ -13,15 +13,17 @@
 - **DANGO-API-003** ✅ — `cached.length > 0` → `cached.length === symbols.length` di `getPricesForSymbols`
 - **DANGO-API-004** ✅ — Admin token kini UUID baru via `randomUUID()`, bukan raw `ADMIN_PASSWORD`. Special case di `requireAuth` dihapus, auth admin kini lewat DB lookup biasa.
 - **DANGO-API-005** ✅ — Nonce increment di `tryOnChainCancelAll` kini atomic via `sql\`nonce + 1\`` + `.returning()`. Race condition read-increment-write dieliminasi.
+- **DANGO-ENGINE-002** ✅ — `tryOnChainCancelAll` dipindahkan ke `dangoTxBuilder.ts` (exported). Auto-rerange scheduler kini memanggil cancel on-chain sebelum update DB. Log eksplisit ditambahkan bahwa re-open order harus manual sampai DANGO-ENGINE-003 diimplementasikan.
 
 ### WONTFIX
 - **DANGO-API-002** — `isSaweriaConfigured()` selalu `true` — hardcoded default intentional by design. Ditambahkan komentar `// intentional default` pada kedua variabel di `saweria.ts`.
 
 ### Dipropose, Belum Diapprove
-- **DANGO-ENGINE-002** — Auto-rerange scheduler tidak memanggil `cancelAllOrders` on-chain
+_(tidak ada)_
 
 ### Pending (belum dipropose)
 - **DANGO-DB-001** — `accessTokensTable` tidak punya kolom `plan`/`isAdmin` untuk membedakan admin vs user — Low — future-proofing jika dibutuhkan admin-only routes
+- **DANGO-ENGINE-003** — Implementasi `openNewGrid` / mass order placement setelah rerange — belum ada di codebase — High — dependency: DANGO-ENGINE-002 selesai
 
 ---
 

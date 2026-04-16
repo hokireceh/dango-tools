@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { db, gridBotsTable, botLogsTable, dangoSessionTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { db, gridBotsTable, botLogsTable } from "@workspace/db";
+import { eq, desc } from "drizzle-orm";
 import { getPriceForPair } from "../lib/priceService";
-import { cancelAllOrders } from "../lib/dangoTxBuilder";
+import { tryOnChainCancelAll } from "../lib/dangoTxBuilder";
 import { logger } from "../lib/logger";
 import {
   CreateGridBotBody,
@@ -13,41 +13,6 @@ import {
   ToggleGridBotParams,
   TriggerRerangeParams,
 } from "@workspace/api-zod";
-
-async function tryOnChainCancelAll(context: string): Promise<void> {
-  // Atomic increment: nonce di-increment langsung di DB dalam satu operasi UPDATE,
-  // menghindari race condition read-increment-write jika dua request masuk bersamaan.
-  const [updated] = await db
-    .update(dangoSessionTable)
-    .set({ nonce: sql`${dangoSessionTable.nonce} + 1`, updatedAt: new Date() })
-    .returning();
-
-  if (!updated || !updated.authorization) {
-    logger.warn({ context }, "Cancel on-chain dilewati — session key belum disetup");
-    return;
-  }
-  const expireAtMs = Number(BigInt(updated.expireAt) / 1_000_000n);
-  if (new Date(expireAtMs) < new Date()) {
-    logger.warn({ context }, "Cancel on-chain dilewati — session key sudah expired");
-    return;
-  }
-
-  const result = await cancelAllOrders({
-    walletAddress: updated.walletAddress,
-    userIndex: updated.userIndex,
-    privkeyEnc: updated.privkeyEnc,
-    pubkey: updated.pubkey,
-    expireAt: updated.expireAt,
-    authorization: updated.authorization,
-    nonce: updated.nonce,
-  });
-
-  if (result.success) {
-    logger.info({ context, result: result.result }, "Cancel all orders on-chain berhasil");
-  } else {
-    logger.error({ context, error: result.error }, "Cancel all orders on-chain gagal — order di Dango mungkin masih aktif");
-  }
-}
 
 const router = Router();
 
