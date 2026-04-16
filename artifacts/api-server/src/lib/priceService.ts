@@ -150,7 +150,7 @@ export async function getPricesForSymbols(symbols: string[]): Promise<MarketPric
   const now = Date.now();
   if (priceCache && now - priceCache.fetchedAt < CACHE_TTL_MS) {
     const cached = priceCache.prices.filter((p) => symbols.includes(p.symbol));
-    if (cached.length > 0) return cached;
+    if (cached.length === symbols.length) return cached;
   }
   const prices = await fetchAllPrices(symbols);
   priceCache = { prices, fetchedAt: now };
