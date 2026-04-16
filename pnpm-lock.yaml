@@ -665,6 +665,22 @@ importers:
         specifier: 'catalog:'
         version: 3.25.76
 
+  lib/dango-keys:
+    dependencies:
+      '@noble/hashes':
+        specifier: ^2.0.1
+        version: 2.0.1
+      '@noble/secp256k1':
+        specifier: ^3.0.0
+        version: 3.0.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.3.5
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+
   lib/db:
     dependencies:
       drizzle-orm:
