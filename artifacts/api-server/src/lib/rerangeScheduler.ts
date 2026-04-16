@@ -9,12 +9,12 @@ const SCHEDULER_INTERVAL_MS = 60 * 1000; // jalankan setiap 60 detik
 // Nilai = fraksi dari lebar range (upper - lower) diukur dari tepi ke dalam.
 // Contoh: 0.30 → trigger jika harga berada dalam 30% lebar range dari tepi atas/bawah.
 // conservative = zona 5% dari tepi (paling jarang trigger — harus hampir keluar dulu)
-// moderate     = zona 50% dari tepi (trigger saat masuk paruh luar range)
-// aggressive   = zona 30% dari tepi (antara moderate dan conservative)
+// moderate     = zona 30% dari tepi (trigger menengah)
+// aggressive   = zona 50% dari tepi (paling sering trigger — sudah di paruh luar range)
 const RERANGE_EDGE_ZONES: Record<string, number> = {
-  conservative: 0.05, // dalam 5% lebar range dari tepi → jarang trigger
-  moderate:     0.50, // dalam 50% lebar range dari tepi → trigger lebih awal
-  aggressive:   0.30, // dalam 30% lebar range dari tepi
+  conservative: 0.05, // dalam 5% lebar range dari tepi → paling jarang trigger
+  moderate:     0.30, // dalam 30% lebar range dari tepi → trigger menengah
+  aggressive:   0.50, // dalam 50% lebar range dari tepi → paling sering trigger
 };
 
 function shouldRerange(

@@ -9,10 +9,9 @@
 ## Status Sesi
 
 ### Sudah Fix
-_(belum ada)_
+- **DANGO-ENGINE-001** ✅ — Swap `moderate` (0.30) ↔ `aggressive` (0.50) di `RERANGE_EDGE_ZONES`
 
 ### Dipropose, Belum Diapprove
-- **DANGO-ENGINE-001** — Rerange mode values terbalik: `moderate` lebih agresif dari `aggressive`
 - **DANGO-ENGINE-002** — Auto-rerange scheduler tidak memanggil `cancelAllOrders` on-chain
 - **DANGO-API-001** — Admin token = raw `ADMIN_PASSWORD`, bukan UUID terpisah
 - **DANGO-API-002** — `isSaweriaConfigured()` selalu `true` karena hardcoded fallback
