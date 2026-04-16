@@ -182,8 +182,15 @@ router.post("/auth/login", async (req, res) => {
   ) {
     const farFuture = new Date();
     farFuture.setFullYear(farFuture.getFullYear() + 10);
+    const adminToken = randomUUID();
+    await db.insert(accessTokensTable).values({
+      token: adminToken,
+      donationId: `admin_${Date.now()}`,
+      amount: 0,
+      expiresAt: farFuture,
+    }).onConflictDoNothing();
     res.json({
-      token: ADMIN_PASSWORD,
+      token: adminToken,
       expiresAt: farFuture.toISOString(),
       plan: "admin",
       amount: 0,

@@ -11,13 +11,17 @@
 ### Sudah Fix
 - **DANGO-ENGINE-001** ✅ — Swap `moderate` (0.30) ↔ `aggressive` (0.50) di `RERANGE_EDGE_ZONES`
 - **DANGO-API-003** ✅ — `cached.length > 0` → `cached.length === symbols.length` di `getPricesForSymbols`
+- **DANGO-API-004** ✅ — Admin token kini UUID baru via `randomUUID()`, bukan raw `ADMIN_PASSWORD`. Special case di `requireAuth` dihapus, auth admin kini lewat DB lookup biasa.
 
 ### WONTFIX
 - **DANGO-API-002** — `isSaweriaConfigured()` selalu `true` — hardcoded default intentional by design. Ditambahkan komentar `// intentional default` pada kedua variabel di `saweria.ts`.
 
 ### Dipropose, Belum Diapprove
 - **DANGO-ENGINE-002** — Auto-rerange scheduler tidak memanggil `cancelAllOrders` on-chain
-- **DANGO-API-004** — Admin token = raw `ADMIN_PASSWORD`, bukan UUID terpisah
+- **DANGO-API-005** — (TBD — akan dipropose sesi ini)
+
+### Pending (belum dipropose)
+- **DANGO-DB-001** — `accessTokensTable` tidak punya kolom `plan`/`isAdmin` untuk membedakan admin vs user — Low — future-proofing jika dibutuhkan admin-only routes
 
 ---
 
