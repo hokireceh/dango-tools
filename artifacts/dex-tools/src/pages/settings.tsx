@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldAlert, Save, Trash2, Info } from "lucide-react";
+import { SessionKeySetup } from "@/components/session-key-setup";
 
 const settingsSchema = z.object({
   rpcEndpoint: z.string().url("Must be a valid URL").or(z.literal("")),
@@ -73,6 +74,8 @@ export default function Settings() {
           Signing transaksi akan dilakukan melalui passkey browser saat integrasi on-chain tersedia.
         </AlertDescription>
       </Alert>
+
+      <SessionKeySetup />
 
       <Card>
         <CardHeader>
