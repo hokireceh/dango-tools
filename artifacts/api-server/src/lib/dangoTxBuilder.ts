@@ -1,4 +1,4 @@
-import { sha256 } from "@noble/hashes/sha256";
+import { sha256 } from "@noble/hashes/sha2.js";
 import * as secp from "@noble/secp256k1";
 import { db, dangoSessionTable } from "@workspace/db";
 import { sql } from "drizzle-orm";

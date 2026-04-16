@@ -175,6 +175,9 @@ importers:
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
+      '@workspace/dango-keys':
+        specifier: workspace:*
+        version: link:../../lib/dango-keys
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
