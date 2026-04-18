@@ -1,0 +1,608 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Dango DEX Tools API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication and payment operations
+  - name: grid-bots
+    description: Grid trading bot operations
+  - name: bot-logs
+    description: Bot activity logs
+  - name: market
+    description: Market summary and price data
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/initiate:
+    post:
+      operationId: initiatePayment
+      tags: [auth]
+      summary: Initiate Saweria QRIS payment for access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitiatePaymentBody"
+      responses:
+        "200":
+          description: Payment initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InitiatePaymentResponse"
+        "503":
+          description: Saweria not configured
+
+  /auth/poll/{donationId}:
+    get:
+      operationId: pollPayment
+      tags: [auth]
+      summary: Poll payment status by donation ID
+      parameters:
+        - name: donationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollPaymentResponse"
+
+  /auth/verify:
+    post:
+      operationId: verifyToken
+      tags: [auth]
+      summary: Verify an access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyTokenBody"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyTokenResponse"
+
+  /grid-bots:
+    get:
+      operationId: listGridBots
+      tags: [grid-bots]
+      summary: List all grid bots
+      responses:
+        "200":
+          description: List of grid bots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GridBot"
+    post:
+      operationId: createGridBot
+      tags: [grid-bots]
+      summary: Create a new grid bot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGridBotBody"
+      responses:
+        "201":
+          description: Grid bot created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GridBot"
+
+  /grid-bots/{id}:
+    get:
+      operationId: getGridBot
+      tags: [grid-bots]
+      summary: Get a grid bot by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Grid bot detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GridBot"
+        "404":
+          description: Not found
+    put:
+      operationId: updateGridBot
+      tags: [grid-bots]
+      summary: Update a grid bot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGridBotBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GridBot"
+    delete:
+      operationId: deleteGridBot
+      tags: [grid-bots]
+      summary: Delete a grid bot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /grid-bots/{id}/toggle:
+    post:
+      operationId: toggleGridBot
+      tags: [grid-bots]
+      summary: Toggle bot active/inactive
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GridBot"
+
+  /grid-bots/{id}/trigger-rerange:
+    post:
+      operationId: triggerRerange
+      tags: [grid-bots]
+      summary: Manually trigger rerange for a bot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rerange triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotLog"
+
+  /bot-logs:
+    get:
+      operationId: listBotLogs
+      tags: [bot-logs]
+      summary: List bot activity logs
+      parameters:
+        - name: botId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: List of logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BotLog"
+
+  /market/summary:
+    get:
+      operationId: getMarketSummary
+      tags: [market]
+      summary: Get market summary for dashboard
+      responses:
+        "200":
+          description: Market summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketSummary"
+
+  /market/stats:
+    get:
+      operationId: getBotStats
+      tags: [market]
+      summary: Get aggregated bot statistics
+      responses:
+        "200":
+          description: Bot stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotStats"
+
+  /market/prices:
+    get:
+      operationId: getMarketPrices
+      tags: [market]
+      summary: Fetch live market prices for common pairs
+      responses:
+        "200":
+          description: Market prices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketPrice"
+
+  /market/price/{symbol}:
+    get:
+      operationId: getTokenPrice
+      tags: [market]
+      summary: Get live price for a specific token symbol
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token price
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketPrice"
+        "404":
+          description: Token not found
+
+components:
+  schemas:
+    InitiatePaymentBody:
+      type: object
+      properties:
+        amount:
+          type: integer
+          enum: [50000, 100000, 150000]
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - amount
+
+    InitiatePaymentResponse:
+      type: object
+      properties:
+        donationId:
+          type: string
+        qrString:
+          type: string
+        amountToPay:
+          type: integer
+        pgFee:
+          type: integer
+      required:
+        - donationId
+        - qrString
+        - amountToPay
+        - pgFee
+
+    PollPaymentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED]
+        token:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+          nullable: true
+      required:
+        - status
+
+    VerifyTokenBody:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    VerifyTokenResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        expiresAt:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+      required:
+        - valid
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    RerangeMode:
+      type: string
+      enum: [off, conservative, moderate, aggressive]
+
+    OrderType:
+      type: string
+      enum: [long, short, neutral]
+
+    ExecutionMode:
+      type: string
+      enum: [aggressive, normal, passive]
+
+    GridBot:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        pair:
+          type: string
+        orderType:
+          $ref: "#/components/schemas/OrderType"
+        lowerPrice:
+          type: number
+        upperPrice:
+          type: number
+        gridCount:
+          type: integer
+        investmentAmount:
+          type: number
+        executionMode:
+          $ref: "#/components/schemas/ExecutionMode"
+        rerangeMode:
+          $ref: "#/components/schemas/RerangeMode"
+        budgetStop:
+          type: number
+          nullable: true
+        isActive:
+          type: boolean
+        totalPnl:
+          type: number
+        rerangeCount:
+          type: integer
+        lastRerangeAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - pair
+        - orderType
+        - lowerPrice
+        - upperPrice
+        - gridCount
+        - investmentAmount
+        - executionMode
+        - rerangeMode
+        - isActive
+        - totalPnl
+        - rerangeCount
+        - createdAt
+        - updatedAt
+
+    CreateGridBotBody:
+      type: object
+      properties:
+        name:
+          type: string
+        pair:
+          type: string
+        orderType:
+          $ref: "#/components/schemas/OrderType"
+        lowerPrice:
+          type: number
+        upperPrice:
+          type: number
+        gridCount:
+          type: integer
+        investmentAmount:
+          type: number
+        executionMode:
+          $ref: "#/components/schemas/ExecutionMode"
+        rerangeMode:
+          $ref: "#/components/schemas/RerangeMode"
+        budgetStop:
+          type: number
+          nullable: true
+      required:
+        - name
+        - pair
+        - orderType
+        - lowerPrice
+        - upperPrice
+        - gridCount
+        - investmentAmount
+        - executionMode
+        - rerangeMode
+
+    UpdateGridBotBody:
+      type: object
+      properties:
+        name:
+          type: string
+        pair:
+          type: string
+        orderType:
+          $ref: "#/components/schemas/OrderType"
+        lowerPrice:
+          type: number
+        upperPrice:
+          type: number
+        gridCount:
+          type: integer
+        investmentAmount:
+          type: number
+        executionMode:
+          $ref: "#/components/schemas/ExecutionMode"
+        rerangeMode:
+          $ref: "#/components/schemas/RerangeMode"
+        budgetStop:
+          type: number
+          nullable: true
+        isActive:
+          type: boolean
+
+    BotLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        botId:
+          type: integer
+        eventType:
+          type: string
+        message:
+          type: string
+        priceAtEvent:
+          type: number
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - botId
+        - eventType
+        - message
+        - createdAt
+
+    MarketSummary:
+      type: object
+      properties:
+        totalBots:
+          type: integer
+        activeBots:
+          type: integer
+        totalPnl:
+          type: number
+        totalReranges:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/BotLog"
+      required:
+        - totalBots
+        - activeBots
+        - totalPnl
+        - totalReranges
+        - recentActivity
+
+    BotStats:
+      type: object
+      properties:
+        byMode:
+          type: object
+          additionalProperties:
+            type: integer
+        avgPnl:
+          type: number
+        topPerformer:
+          $ref: "#/components/schemas/GridBot"
+          nullable: true
+      required:
+        - byMode
+        - avgPnl
+
+    MarketPrice:
+      type: object
+      properties:
+        symbol:
+          type: string
+        pair:
+          type: string
+        price:
+          type: number
+        change24h:
+          type: number
+        high24h:
+          type: number
+        low24h:
+          type: number
+        volume24h:
+          type: number
+        source:
+          type: string
+      required:
+        - symbol
+        - pair
+        - price
+        - change24h
+        - high24h
+        - low24h
+        - volume24h
+        - source
