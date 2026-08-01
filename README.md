@@ -1,3 +1,18 @@
+> ## ⚠️ PROJECT DITUTUP (SHUTDOWN)
+>
+> **Dango Exchange resmi ditutup pada 2026.** Setelah berbulan-bulan beroperasi, tim memutuskan menghentikan proyek — tidak ada jalur menuju kesuksesan komersial jangka panjang.
+>
+> - 📅 **Trading berhenti: 29 Juli 2026**
+> - 📅 **Chain Dango berhenti beroperasi: 13 Agustus 2026**
+> - 🔒 **Dana (funds) aman** — limit withdraw dicabut setelah pengumuman
+> - 📰 Dango termasuk **17 penutupan/kebangkrutan aset kripto besar** sepanjang 2026
+>
+> Sumber: [Pengumuman resmi @dango (X/Twitter, 24 Juli 2026)](https://x.com/dango/status/2080707796144705625) · [BeInCrypto: Dango Shutdown DEX 2026](https://id.beincrypto.com/dango-shutdown-dex-2026/)
+>
+> Repo ini **diarsipkan** — read-only, tidak ada development lanjutan. Histori & kode disimpan sebagai arsip referensi.
+>
+> ---
+
 # Dango DEX Tools
 
 Platform trading dashboard untuk Dango Exchange — mencakup Grid Trading Bot dengan manajemen rerange otomatis, sistem akses berbasis langganan via Telegram Bot + Saweria QRIS, dan dashboard monitoring.
